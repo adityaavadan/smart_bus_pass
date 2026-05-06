@@ -49,7 +49,6 @@ with app.app_context():
 def inject_translations():
     lang = session.get('lang', 'en')
     t_data = TRANSLATIONS.get(lang, TRANSLATIONS['en'])
-    # Ensure all required keys exist to prevent errors
     t_data.setdefault('admin_dashboard', 'Admin')
     return dict(lang=lang, t=t_data, datetime=datetime)
 
@@ -114,7 +113,7 @@ def bus_routes():
     return render_template('routes.html', routes=[])
 
 @app.route('/profile')
-@app.route('/student/profile') # This is the missing link!
+@app.route('/student/profile')
 def student_profile():
     if 'user_id' not in session: return redirect(url_for('login'))
     return render_template('profile.html', user=User.query.get(session['user_id']))
@@ -127,7 +126,8 @@ def payment(app_id):
 def logout():
     session.clear()
     return redirect(url_for('index'))
-    @app.route('/secret-admin-setup', methods=['GET', 'POST'])
+
+@app.route('/secret-admin-setup', methods=['GET', 'POST'])
 def secret_admin_setup():
     if request.method == 'POST':
         email = request.form['email']
@@ -138,7 +138,6 @@ def secret_admin_setup():
             flash('Admin account created!', 'success')
             return redirect(url_for('login'))
     return render_template('register_admin.html')
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
