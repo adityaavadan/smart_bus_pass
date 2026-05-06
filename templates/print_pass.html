@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Print Pass #{{ app.id }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body { background: white; padding: 2rem; display: flex; flex-direction: column; align-items: center; }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; }
+            .digital-id-card { box-shadow: none; border: 1px solid #ccc; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="margin-bottom: 2rem;">
+        <button onclick="window.print()" class="btn btn-primary">Print / Save as PDF</button>
+        <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline" style="margin-left: 1rem;">Back</a>
+    </div>
+
+    <div class="digital-id-card">
+        <div class="id-header">
+            <h3>SMART PASS</h3>
+            <span class="id-type">{{ app.pass_type }}</span>
+        </div>
+        <div class="id-body">
+            <div class="id-photo">
+                {% if app.profile_pic_filename %}
+                    <img src="{{ url_for('static', filename='uploads/' + app.profile_pic_filename) }}" alt="Profile Photo">
+                {% else %}
+                    <div class="placeholder-photo">No Photo</div>
+                {% endif %}
+            </div>
+            <div class="id-details">
+                <h4>{{ app.student.full_name or app.student.email }}</h4>
+                <p><strong>ID:</strong> #{{ app.id }}</p>
+                <p><strong>Route:</strong> {{ app.source }} &rarr; {{ app.destination }}</p>
+                <p><strong>Valid Till:</strong> <span style="color: #ffcccc;">{{ app.validity_end.strftime('%d %b %Y') }}</span></p>
+            </div>
+        </div>
+        <div class="id-footer">
+            <div class="id-qr">
+                <img src="{{ url_for('static', filename='qrcodes/' + app.qr_code_data) }}" alt="QR Code">
+            </div>
+            <div class="id-scan-text">Scan to verify</div>
+        </div>
+    </div>
+</body>
+</html>

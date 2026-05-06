@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bus Pass Automation{% endblock %}</title>
+    <!-- Google Fonts for Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="nav-brand">
+            🚌 SmartPass
+        </a>
+        <div class="nav-links">
+            <!-- Language Switcher -->
+            <div class="lang-switcher" style="display: inline-block; margin-right: 1rem;">
+                <select onchange="location = this.value;" style="padding: 0.2rem; border-radius: 4px; border: 1px solid #ccc; font-size: 0.9rem;">
+                    <option value="{{ url_for('set_language', lang='en') }}" {% if lang == 'en' %}selected{% endif %}>EN</option>
+                    <option value="{{ url_for('set_language', lang='hi') }}" {% if lang == 'hi' %}selected{% endif %}>HI</option>
+                    <option value="{{ url_for('set_language', lang='mr') }}" {% if lang == 'mr' %}selected{% endif %}>MR</option>
+                </select>
+            </div>
+
+            <a href="{{ url_for('index') }}">{{ t.home }}</a>
+            <a href="{{ url_for('bus_routes') }}">{{ t.routes }}</a>
+            {% if session.get('user_id') %}
+                {% if session.get('role') == 'admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}">{{ t.admin_dashboard }}</a>
+                {% else %}
+                    <a href="{{ url_for('student_dashboard') }}">{{ t.dashboard }}</a>
+                    <a href="{{ url_for('student_profile') }}">{{ t.profile }}</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="btn btn-outline">{{ t.logout }} ({{ session.get('email') }})</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">{{ t.login }}</a>
+                <a href="{{ url_for('register') }}" class="btn btn-primary">{{ t.register }}</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="alerts">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer>
+        <p>&copy; 2026 SmartPass - Bus Pass Automation System</p>
+    </footer>
+</body>
+</html>

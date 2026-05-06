@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify OTP - SmartPass{% endblock %}
+
+{% block content %}
+<div class="card" style="border-top: 4px solid var(--primary-color);">
+    <h2 style="margin-bottom: 0.5rem;">Verify Your Email</h2>
+    <p style="text-align: center; margin-bottom: 1.5rem; color: #6c757d;">We sent a 6-digit OTP to <strong>{{ session.get('reg_email') }}</strong></p>
+    
+    <form method="POST" action="{{ url_for('verify_otp') }}">
+        <div class="form-group">
+            <label for="otp" style="text-align: center; display: block;">Enter OTP</label>
+            <input type="text" id="otp" name="otp" required placeholder="e.g. 123456" 
+                   style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; font-weight: bold;">
+        </div>
+        <button type="submit" class="btn btn-primary form-submit">Verify & Register</button>
+    </form>
+    
+    <p style="text-align: center; margin-top: 1.5rem;">
+        <a href="{{ url_for('register') }}" style="color: var(--danger);">Cancel Registration</a>
+    </p>
+</div>
+{% endblock %}

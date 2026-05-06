@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - SmartPass{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h2>Admin Dashboard</h2>
+</div>
+
+<div class="grid" style="margin-bottom: 2rem;">
+    <div class="card" style="margin: 0; padding: 1.5rem; text-align: center; border-top: 4px solid var(--primary-color);">
+        <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--primary-color);">{{ stats.total_passes }}</h3>
+        <p style="color: #6c757d; font-weight: 500;">Total Applications</p>
+    </div>
+    <div class="card" style="margin: 0; padding: 1.5rem; text-align: center; border-top: 4px solid var(--success);">
+        <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--success);">{{ stats.active_passes }}</h3>
+        <p style="color: #6c757d; font-weight: 500;">Active Passes</p>
+    </div>
+    <div class="card" style="margin: 0; padding: 1.5rem; text-align: center; border-top: 4px solid var(--warning);">
+        <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--warning);">{{ stats.pending_count }}</h3>
+        <p style="color: #6c757d; font-weight: 500;">Pending Actions</p>
+    </div>
+    <div class="card" style="margin: 0; padding: 1.5rem; text-align: center; border-top: 4px solid #9c27b0;">
+        <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem; color: #9c27b0;">₹{{ stats.total_revenue }}</h3>
+        <p style="color: #6c757d; font-weight: 500;">Total Revenue</p>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table>
+        <thead>
+            <tr>
+                <th>App ID</th>
+                <th>Student</th>
+                <th>{{ t.profile_photo }}</th>
+                <th>{{ t.aadhar_photo }}</th>
+                <th>Route</th>
+                <th>Type</th>
+                <th>{{ t.status }}</th>
+                <th>{{ t.action }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>#{{ app.id }}</td>
+                <td><strong>{{ app.student.email }}</strong></td>
+                <td>
+                    {% if app.profile_pic_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' + app.profile_pic_filename) }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" alt="Photo">
+                    {% else %}
+                        <span style="font-size: 0.8rem; color: #999;">No Photo</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if app.aadhar_pic_filename %}
+                        <a href="{{ url_for('static', filename='uploads/' + app.aadhar_pic_filename) }}" target="_blank">
+                            <img src="{{ url_for('static', filename='uploads/' + app.aadhar_pic_filename) }}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;" alt="Aadhar">
+                        </a>
+                    {% else %}
+                        <span style="font-size: 0.8rem; color: #999;">No Aadhar</span>
+                    {% endif %}
+                </td>
+                <td>{{ app.source }} &rarr; {{ app.destination }}</td>
+                <td>{{ app.pass_type }}</td>
+                <td>
+                    {% if app.status == 'Pending Payment' %}
+                        <span class="badge" style="background-color: #cce5ff; color: #004085;">{{ t.pay_now }}</span>
+                    {% elif app.status == 'Expired' %}
+                        <span class="badge" style="background-color: #6c757d; color: #ffffff;">{{ t.expiry }}</span>
+                    {% else %}
+                        <span class="badge badge-{{ app.status.lower().replace(' ', '-') }}">
+                            {% if app.status == 'Pending' %}{{ t.pending }}
+                            {% elif app.status == 'Approved' %}{{ t.approve }}
+                            {% elif app.status == 'Rejected' %}{{ t.reject }}
+                            {% else %}{{ app.status }}{% endif %}
+                        </span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if app.status == 'Pending' %}
+                        <a href="{{ url_for('approve_pass', app_id=app.id) }}" class="btn btn-success" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; margin-right: 0.5rem;">{{ t.approve }}</a>
+                        <a href="{{ url_for('reject_pass', app_id=app.id) }}" class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">{{ t.reject }}</a>
+                    {% else %}
+                        <em>Processed</em>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem;">No applications found in the system.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

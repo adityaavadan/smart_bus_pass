@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ t.profile }} - SmartPass{% endblock %}
+
+{% block content %}
+<div class="card" style="margin: 0 auto; max-width: 600px;">
+    <h2>{{ t.profile }}</h2>
+    <p style="text-align: center; margin-bottom: 2rem;">Update your personal details here.</p>
+    
+    <form method="POST" action="{{ url_for('student_profile') }}">
+        <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" value="{{ user.email }}" disabled style="background-color: #e9ecef; cursor: not-allowed;">
+        </div>
+        <div class="form-group">
+            <label for="full_name">{{ t.full_name }}</label>
+            <input type="text" id="full_name" name="full_name" value="{{ user.full_name or '' }}" placeholder="Enter your full name">
+        </div>
+        <div class="form-group">
+            <label for="phone_number">{{ t.phone }}</label>
+            <input type="text" id="phone_number" name="phone_number" value="{{ user.phone_number or '' }}" placeholder="Enter your phone number">
+        </div>
+        <div class="form-group">
+            <label for="address">{{ t.address }}</label>
+            <input type="text" id="address" name="address" value="{{ user.address or '' }}" placeholder="Enter your complete address">
+        </div>
+        
+        <button type="submit" class="btn btn-primary form-submit">{{ t.save_profile }}</button>
+    </form>
+</div>
+{% endblock %}
