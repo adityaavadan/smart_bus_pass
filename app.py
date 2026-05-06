@@ -6,7 +6,10 @@ from werkzeug.utils import secure_filename
 import qrcode
 from datetime import datetime, timedelta
 
-from models import db, User, PassApplication
+try:
+    from models import db, User, PassApplication
+except ImportError:
+    from .models import db, User, PassApplication
 from translations import TRANSLATIONS, KOLHAPUR_VILLAGES
 
 app = Flask(__name__)
