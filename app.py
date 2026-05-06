@@ -1,39 +1,41 @@
 import os
 import random
+import logging
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-import qrcode
 from datetime import datetime, timedelta
 
+# Try-except block for imports to help debugging on Render
 try:
     from models import db, User, PassApplication
-except ImportError:
+    from translations import TRANSLATIONS, KOLHAPUR_VILLAGES
+except ImportError as e:
+    print(f"IMPORT ERROR: {e}")
+    # Local import fallback
     from .models import db, User, PassApplication
-from translations import TRANSLATIONS, KOLHAPUR_VILLAGES
+    from .translations import TRANSLATIONS, KOLHAPUR_VILLAGES
 
 app = Flask(__name__)
-app.secret_key = 'super_secret_key_bus_pass_123'
-# Stable database path for Render
+app.secret_key = os.environ.get('SECRET_KEY', 'super_secret_bus_pass_789')
+
+# Use a very stable database path
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'buspass.db')
+db_path = os.path.join(basedir, 'buspass.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
 db.init_app(app)
 
-QR_DIR = os.path.join(app.root_path, 'static', 'qrcodes')
-os.makedirs(QR_DIR, exist_ok=True)
-UPLOAD_DIR = os.path.join(app.root_path, 'static', 'uploads')
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
+# Ensure folders exist
 with app.app_context():
-    db.create_all()
+    os.makedirs(os.path.join(app.root_path, 'static', 'qrcodes'), exist_ok=True)
+    os.makedirs(os.path.join(app.root_path, 'static', 'uploads'), exist_ok=True)
+    try:
+        db.create_all()
+    except Exception as e:
+        print(f"DATABASE ERROR: {e}")
 
 @app.context_processor
 def inject_translations():
@@ -43,8 +45,7 @@ def inject_translations():
 
 @app.route('/set-language/<lang>')
 def set_language(lang):
-    if lang in TRANSLATIONS:
-        session['lang'] = lang
+    session['lang'] = lang
     return redirect(request.referrer or url_for('index'))
 
 @app.route('/')
@@ -55,18 +56,17 @@ def index():
 def register():
     if request.method == 'POST':
         email = request.form['email']
-        password = request.form['password']
         if User.query.filter_by(email=email).first():
             flash('Email already registered!', 'danger')
             return redirect(url_for('register'))
-        hashed_password = generate_password_hash(password)
+        hashed_password = generate_password_hash(request.form['password'])
         otp = str(random.randint(100000, 999999))
         session['reg_email'] = email
         session['reg_password'] = hashed_password
         session['reg_role'] = 'student'
         session['reg_otp'] = otp
-        print(f"--- OTP: {otp} ---")
-        flash(f'An OTP has been sent (CODE: {otp})', 'info')
+        print(f"--- OTP SENT TO {email}: {otp} ---")
+        flash(f'OTP sent (CODE: {otp})', 'info')
         return redirect(url_for('verify_otp'))
     return render_template('register.html')
 
@@ -79,22 +79,21 @@ def verify_otp():
             db.session.add(new_user)
             db.session.commit()
             session.clear()
-            flash('Registration successful! Please login.', 'success')
+            flash('Success! Please login.', 'success')
             return redirect(url_for('login'))
-        flash('Invalid OTP.', 'danger')
+        flash('Invalid OTP', 'danger')
     return render_template('verify_otp.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=request.form['email']).first()
         if user and check_password_hash(user.password, request.form['password']):
             session['user_id'] = user.id
             session['email'] = user.email
             session['role'] = user.role
             return redirect(url_for('admin_dashboard' if user.role == 'admin' else 'student_dashboard'))
-        flash('Invalid email or password', 'danger')
+        flash('Invalid credentials', 'danger')
     return render_template('login.html')
 
 @app.route('/logout')
@@ -105,7 +104,7 @@ def logout():
 @app.route('/student/dashboard')
 def student_dashboard():
     if 'user_id' not in session: return redirect(url_for('login'))
-    apps = PassApplication.query.filter_by(user_id=session['user_id']).order_by(PassApplication.created_at.desc()).all()
+    apps = PassApplication.query.filter_by(user_id=session['user_id']).all()
     user = User.query.get(session['user_id'])
     return render_template('student_dashboard.html', applications=apps, user=user, expiring_soon=False)
 
@@ -113,16 +112,13 @@ def student_dashboard():
 def apply_pass():
     if 'user_id' not in session: return redirect(url_for('login'))
     if request.method == 'POST':
-        source = request.form['source']
-        dest = request.form['destination']
-        p_file = request.files['profile_pic']
-        a_file = request.files['aadhar_pic']
-        if p_file and allowed_file(p_file.filename) and a_file and allowed_file(a_file.filename):
+        source, dest = request.form['source'], request.form['destination']
+        p_file, a_file = request.files['profile_pic'], request.files['aadhar_pic']
+        if p_file and a_file:
             ts = int(datetime.utcnow().timestamp())
-            p_name = secure_filename(f"p_{ts}_{p_file.filename}")
-            a_name = secure_filename(f"a_{ts}_{a_file.filename}")
-            p_file.save(os.path.join(UPLOAD_DIR, p_name))
-            a_file.save(os.path.join(UPLOAD_DIR, a_name))
+            p_name, a_name = secure_filename(f"p_{ts}_{p_file.filename}"), secure_filename(f"a_{ts}_{a_file.filename}")
+            p_file.save(os.path.join(app.root_path, 'static', 'uploads', p_name))
+            a_file.save(os.path.join(app.root_path, 'static', 'uploads', a_name))
             fee = 100 + (len(source) + len(dest)) * 15
             new_app = PassApplication(user_id=session['user_id'], pass_type=request.form['pass_type'], source=source, destination=dest, profile_pic_filename=p_name, aadhar_pic_filename=a_name, fee=fee)
             db.session.add(new_app)
@@ -133,25 +129,21 @@ def apply_pass():
 @app.route('/admin/dashboard')
 def admin_dashboard():
     if session.get('role') != 'admin': return redirect(url_for('login'))
-    apps = PassApplication.query.order_by(PassApplication.created_at.desc()).all()
-    stats = {'total_passes': len(apps), 'active_passes': 0, 'pending_count': 0, 'total_revenue': 0}
-    return render_template('admin_dashboard.html', applications=apps, stats=stats)
+    apps = PassApplication.query.all()
+    return render_template('admin_dashboard.html', applications=apps, stats={'total_passes': len(apps), 'active_passes': 0, 'pending_count': 0, 'total_revenue': 0})
 
 @app.route('/secret-admin-setup', methods=['GET', 'POST'])
 def secret_admin_setup():
     if request.method == 'POST':
-        email = request.form['email']
-        if User.query.filter_by(email=email).first(): return "Admin already exists"
-        new_user = User(email=email, password=generate_password_hash(request.form['password']), role='admin')
-        db.session.add(new_user)
-        db.session.commit()
-        return redirect(url_for('login'))
+        if not User.query.filter_by(email=request.form['email']).first():
+            db.session.add(User(email=request.form['email'], password=generate_password_hash(request.form['password']), role='admin'))
+            db.session.commit()
+            return redirect(url_for('login'))
     return render_template('register_admin.html')
 
 @app.route('/routes')
 def bus_routes():
-    routes = [{"bus_no": "K-101", "path": "Kolhapur <-> Ichalkaranji", "frequency": "15m"}]
-    return render_template('routes.html', routes=routes)
+    return render_template('routes.html', routes=[{"bus_no": "K-101", "path": "Kolhapur City", "frequency": "15m"}])
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
