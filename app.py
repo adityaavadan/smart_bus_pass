@@ -11,7 +11,8 @@ from translations import TRANSLATIONS, KOLHAPUR_VILLAGES
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_for_bus_pass'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///buspass.db'
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'buspass.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024 # 50MB limit for uploads
 
