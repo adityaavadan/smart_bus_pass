@@ -38,26 +38,33 @@ class PassApplication(db.Model):
     validity_end = db.Column(db.DateTime, default=datetime.utcnow() + timedelta(days=30))
 
 # --- TRANSLATIONS (Fixed Blank Button Issue) ---
-TRANSLATIONS = {
+TRANSLATIONS = TRANSLATIONS = {
     'en': {
         'title': 'SmartBus Pass', 'home': 'Home', 'login': 'Login', 'register': 'Register',
         'dashboard': 'Dashboard', 'logout': 'Logout', 'apply_pass': 'Apply New Pass',
         'routes': 'Bus Routes', 'profile': 'Profile', 'pay_now': 'Pay Fee',
-        'view_pass': 'View Pass', 'download_pdf': 'Download', 'renew': 'Renew'
+        'view_pass': 'View Pass', 'download_pdf': 'Download', 'renew': 'Renew',
+        'source': 'Source Village', 'destination': 'Destination', 'pass_type_label': 'Pass Type',
+        'photo_label': 'Your Photo', 'aadhar_label': 'Aadhar Card', 'submit_btn': 'Submit Application'
     },
     'hi': {
         'title': 'स्मार्टबस पास', 'home': 'होम', 'login': 'लॉगिन', 'register': 'पंजीकरण',
         'dashboard': 'डैशबोर्ड', 'logout': 'लॉगआउट', 'apply_pass': 'नया पास आवेदन',
         'routes': 'बस मार्ग', 'profile': 'प्रोफ़ाइल', 'pay_now': 'शुल्क भुगतान',
-        'view_pass': 'पास देखें', 'download_pdf': 'डाउनलोड', 'renew': 'नवीनीकरण'
+        'view_pass': 'पास देखें', 'download_pdf': 'डाउनलोड', 'renew': 'नवीनीकरण',
+        'source': 'स्रोत गांव', 'destination': 'गंतव्य', 'pass_type_label': 'पास का प्रकार',
+        'photo_label': 'आपका फोटो', 'aadhar_label': 'आधार कार्ड', 'submit_btn': 'आवेदन जमा करें'
     },
     'mr': {
         'title': 'स्मार्टबस पास', 'home': 'होम', 'login': 'लॉगिन', 'register': 'नोंदणी',
         'dashboard': 'डॅशबोर्ड', 'logout': 'लॉगआउट', 'apply_pass': 'नवीन अर्ज',
         'routes': 'बस मार्ग', 'profile': 'प्रोफाईल', 'pay_now': 'शुल्क भरा',
-        'view_pass': 'पास पहा', 'download_pdf': 'डाउनलोड', 'renew': 'नूतनीकरण'
+        'view_pass': 'पास पहा', 'download_pdf': 'डाउनलोड', 'renew': 'नूतनीकरण',
+        'source': 'कुठून (गाव)', 'destination': 'कुठे (गंतव्य)', 'pass_type_label': 'पासचा प्रकार',
+        'photo_label': 'तुमचा फोटो', 'aadhar_label': 'आधार कार्ड', 'submit_btn': 'अर्ज सादर करा'
     }
 }
+
 VILLAGES = ["Kolhapur", "Ichalkaranji", "Kagal", "Panhala", "Jaysingpur", "Gadhinglaj"]
 
 with app.app_context():
