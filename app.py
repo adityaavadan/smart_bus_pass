@@ -1,237 +1,307 @@
 import os
 import random
-import logging
-from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+import qrcode
+from datetime import datetime, timedelta
 
-# --- CONFIGURATION ---
+from models import db, User, PassApplication
+from translations import TRANSLATIONS, KOLHAPUR_VILLAGES
+
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'smart_bus_pass_ultimate_2026_pro')
-
-# Database Setup (Absolute path for Render stability)
+app.secret_key = 'super_secret_key_for_bus_pass'
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'buspass.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024 # 50MB limit for uploads
 
-# Uploads Setup
-UPLOAD_FOLDER = os.path.join(basedir, 'static', 'uploads')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 
+db.init_app(app)
 
-db = SQLAlchemy(app)
+QR_DIR = os.path.join(app.root_path, 'static', 'qrcodes')
+os.makedirs(QR_DIR, exist_ok=True)
+UPLOAD_DIR = os.path.join(app.root_path, 'static', 'uploads')
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# --- DATABASE MODELS ---
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(10), nullable=False, default='student')
-    applications = db.relationship('PassApplication', backref='student', lazy=True)
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-class PassApplication(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    pass_type = db.Column(db.String(50), nullable=False) 
-    source = db.Column(db.String(100), nullable=False)
-    destination = db.Column(db.String(100), nullable=False)
-    status = db.Column(db.String(20), default='Pending') # Pending, Approved, Rejected, Expired
-    fee = db.Column(db.Integer, default=250)
-    profile_pic_filename = db.Column(db.String(255))
-    aadhar_pic_filename = db.Column(db.String(255))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    validity_start = db.Column(db.DateTime)
-    validity_end = db.Column(db.DateTime)
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# --- TRANSLATIONS DATA (FULL) ---
-TRANSLATIONS =TRANSLATIONS = {
-    'en': {
-        'title': 'SmartBus Pass', 'home': 'Home', 'login': 'Login', 'register': 'Register',
-        'dashboard': 'Dashboard', 'logout': 'Logout', 'apply_pass': 'Apply',
-        'routes': 'Routes', 'profile': 'Profile', 'approve': 'Fast Approval', 
-        'submit': 'Submit', 'view_pass': 'Digital Pass'
-    },
-    'hi': {
-        'title': 'स्मार्टबस पास', 'home': 'होम', 'login': 'लॉगिन', 'register': 'पंजीकरण',
-        'dashboard': 'डैशबोर्ड', 'logout': 'लॉगआउट', 'apply_pass': 'आवेदन',
-        'routes': 'मार्ग', 'profile': 'प्रोफ़ाइल', 'approve': 'तेजी से स्वीकृति', 
-        'submit': 'जमा करें', 'view_pass': 'डिजिटल पास'
-    },
-    'mr': {
-        'title': 'स्मार्टबस पास', 'home': 'होम', 'login': 'लॉगिन', 'register': 'नोंदणी',
-        'dashboard': 'डॅशबोर्ड', 'logout': 'लॉगआउट', 'apply_pass': 'अर्ज',
-        'routes': 'मार्ग', 'profile': 'प्रोफाईल', 'approve': 'त्वरीत मान्यता', 
-        'submit': 'सादर करा', 'view_pass': 'डिजिटल पास'
-    }
-}
-
-KOLHAPUR_VILLAGES = [
-    "Kolhapur City", "Ichalkaranji", "Kagal", "Panhala", "Jaysingpur", "Gadhinglaj", 
-    "Shirol", "Hatkanangale", "Ajara", "Chandgad", "Radhanagari", "Bhudargad",
-    "Shahuwadi", "Bavada", "Karveer", "Gargoti", "Murgud", "Kurundwad"
-]
-
-# --- INIT ---
-with app.app_context():
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    db.create_all()
-    if not User.query.filter_by(role='admin').first():
-        db.session.add(User(email='admin@buspass.com', password=generate_password_hash('admin123'), role='admin'))
+def check_expirations():
+    expired_apps = PassApplication.query.filter(
+        PassApplication.status == 'Approved',
+        PassApplication.validity_end < datetime.utcnow()
+    ).all()
+    for app_item in expired_apps:
+        app_item.status = 'Expired'
+    if expired_apps:
         db.session.commit()
 
-@app.context_processor
-def inject_global_data():
-    lang = session.get('lang', 'en')
-    t_data = TRANSLATIONS.get(lang, TRANSLATIONS['en'])
-    t_data.update({'admin_dashboard': 'Admin Panel', 'status_label': 'Status'})
-    return dict(lang=lang, t=t_data, datetime=datetime, villages=KOLHAPUR_VILLAGES)
+with app.app_context():
+    db.create_all()
 
-# --- ROUTES ---
-@app.route('/')
-def index(): return render_template('index.html')
+@app.context_processor
+def inject_translations():
+    lang = session.get('lang', 'en')
+    return dict(lang=lang, t=TRANSLATIONS.get(lang, TRANSLATIONS['en']), datetime=datetime)
 
 @app.route('/set-language/<lang>')
 def set_language(lang):
-    session['lang'] = lang
+    if lang in TRANSLATIONS:
+        session['lang'] = lang
     return redirect(request.referrer or url_for('index'))
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        user = User.query.filter_by(email=request.form['email']).first()
-        if user and check_password_hash(user.password, request.form['password']):
-            session.update({'user_id': user.id, 'role': user.role, 'email': user.email})
-            return redirect(url_for('admin_dashboard' if user.role == 'admin' else 'student_dashboard'))
-        flash('Invalid login', 'danger')
-    return render_template('login.html')
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         email = request.form['email']
-        if User.query.filter_by(email=email).first():
-            flash('Email used', 'warning')
+        password = request.form['password']
+        
+        user_exists = User.query.filter_by(email=email).first()
+        if user_exists:
+            flash('Email already registered!', 'danger')
             return redirect(url_for('register'))
+            
+        hashed_password = generate_password_hash(password)
+        
         otp = str(random.randint(100000, 999999))
-        session.update({'reg_email': email, 'reg_password': generate_password_hash(request.form['password']), 'reg_otp': otp})
-        flash(f"YOUR OTP IS: {otp}", "info")
+        session['reg_email'] = email
+        session['reg_password'] = hashed_password
+        session['reg_role'] = 'student'
+        session['reg_otp'] = otp
+        
+        print(f"--- SIMULATED EMAIL SENT TO {email} | OTP: {otp} ---")
+        flash(f'An OTP has been sent to your email. (SIMULATION CODE: {otp})', 'info')
+        
         return redirect(url_for('verify_otp'))
+        
     return render_template('register.html')
 
 @app.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
-    if 'reg_email' not in session: return redirect(url_for('register'))
+    if 'reg_email' not in session:
+        return redirect(url_for('register'))
+        
     if request.method == 'POST':
-        if request.form['otp'] == session.get('reg_otp'):
-            db.session.add(User(email=session['reg_email'], password=session['reg_password']))
+        entered_otp = request.form['otp']
+        
+        if entered_otp == session.get('reg_otp'):
+            new_user = User(
+                email=session['reg_email'], 
+                password=session['reg_password'], 
+                role=session['reg_role']
+            )
+            db.session.add(new_user)
             db.session.commit()
-            session.clear()
-            flash('Success! Log in now.', 'success')
+            
+            session.pop('reg_email', None)
+            session.pop('reg_password', None)
+            session.pop('reg_role', None)
+            session.pop('reg_otp', None)
+            
+            flash('Email verified and registration successful! Please login.', 'success')
             return redirect(url_for('login'))
+        else:
+            flash('Invalid OTP. Please try again.', 'danger')
+            
     return render_template('verify_otp.html')
+
+@app.route('/secret-admin-setup', methods=['GET', 'POST'])
+def secret_admin_setup():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        
+        user_exists = User.query.filter_by(email=email).first()
+        if user_exists:
+            flash('Admin email already exists!', 'danger')
+            return redirect(url_for('secret_admin_setup'))
+            
+        hashed_password = generate_password_hash(password)
+        new_user = User(email=email, password=hashed_password, role='admin')
+        db.session.add(new_user)
+        db.session.commit()
+        
+        flash('Admin Account Created Successfully!', 'success')
+        return redirect(url_for('login'))
+        
+    return render_template('register_admin.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        
+        user = User.query.filter_by(email=email).first()
+        if user and check_password_hash(user.password, password):
+            session['user_id'] = user.id
+            session['email'] = user.email
+            session['role'] = user.role
+            
+            if user.role == 'admin':
+                return redirect(url_for('admin_dashboard'))
+            else:
+                return redirect(url_for('student_dashboard'))
+        else:
+            flash('Invalid email or password', 'danger')
+            
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('Logged out successfully.', 'info')
+    return redirect(url_for('index'))
 
 @app.route('/student/dashboard')
 def student_dashboard():
-    if 'user_id' not in session: return redirect(url_for('login'))
+    if 'user_id' not in session or session.get('role') != 'student':
+        return redirect(url_for('login'))
+        
+    check_expirations()
+    
+    user_id = session['user_id']
+    applications = PassApplication.query.filter_by(user_id=user_id).order_by(PassApplication.created_at.desc()).all()
+    user = User.query.get(user_id)
+    
+    expiring_soon = False
+    for app_item in applications:
+        if app_item.status == 'Approved' and app_item.validity_end:
+            days_left = (app_item.validity_end - datetime.utcnow()).days
+            if 0 <= days_left <= 3:
+                expiring_soon = True
+                break
+                
+    return render_template('student_dashboard.html', applications=applications, user=user, expiring_soon=expiring_soon)
+
+@app.route('/student/profile', methods=['GET', 'POST'])
+def student_profile():
+    if 'user_id' not in session or session.get('role') != 'student':
+        return redirect(url_for('login'))
+        
     user = User.query.get(session['user_id'])
-    return render_template('student_dashboard.html', applications=user.applications, user=user)
+    
+    if request.method == 'POST':
+        user.full_name = request.form.get('full_name')
+        user.phone_number = request.form.get('phone_number')
+        user.address = request.form.get('address')
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('student_dashboard'))
+        
+    return render_template('profile.html', user=user)
 
 @app.route('/student/apply', methods=['GET', 'POST'])
 def apply_pass():
-    if 'user_id' not in session: return redirect(url_for('login'))
-    if request.method == 'POST':
-        p_file = request.files.get('profile_pic')
-        a_file = request.files.get('aadhar_pic')
-        p_name = secure_filename(p_file.filename) if p_file else "default.png"
-        a_name = secure_filename(a_file.filename) if a_file else "default.png"
-        if p_file: p_file.save(os.path.join(app.config['UPLOAD_FOLDER'], p_name))
-        if a_file: a_file.save(os.path.join(app.config['UPLOAD_FOLDER'], a_name))
-
-        # Dynamic fee calculation
-        base = 150
-        dist = (len(request.form['source']) + len(request.form['destination'])) * 5
+    if 'user_id' not in session or session.get('role') != 'student':
+        return redirect(url_for('login'))
         
-        new_app = PassApplication(
-            user_id=session['user_id'], pass_type=request.form['pass_type'],
-            source=request.form['source'], destination=request.form['destination'],
-            profile_pic_filename=p_name, aadhar_pic_filename=a_name, fee=base+dist
-        )
-        db.session.add(new_app)
+    if request.method == 'POST':
+        pass_type = request.form['pass_type']
+        source = request.form['source']
+        destination = request.form['destination']
+        
+        profile_file = request.files['profile_pic']
+        aadhar_file = request.files['aadhar_pic']
+        
+        if profile_file and allowed_file(profile_file.filename) and aadhar_file and allowed_file(aadhar_file.filename):
+            timestamp = int(datetime.utcnow().timestamp())
+            profile_filename = secure_filename(f"user_{session['user_id']}_{timestamp}_{profile_file.filename}")
+            aadhar_filename = secure_filename(f"user_{session['user_id']}_{timestamp}_{aadhar_file.filename}")
+            
+            profile_file.save(os.path.join(UPLOAD_DIR, profile_filename))
+            aadhar_file.save(os.path.join(UPLOAD_DIR, aadhar_filename))
+            
+            base_fee = 100 + (len(source) + len(destination)) * 15
+            
+            new_app = PassApplication(
+                user_id=session['user_id'],
+                pass_type=pass_type,
+                source=source,
+                destination=destination,
+                profile_pic_filename=profile_filename,
+                aadhar_pic_filename=aadhar_filename,
+                fee=base_fee
+            )
+            db.session.add(new_app)
+            db.session.commit()
+            flash('Application submitted!', 'success')
+            return redirect(url_for('student_dashboard'))
+            
+    return render_template('apply_pass.html', villages=KOLHAPUR_VILLAGES)
+
+@app.route('/student/pay/<int:app_id>', methods=['GET', 'POST'])
+def pay_pass(app_id):
+    if 'user_id' not in session or session.get('role') != 'student':
+        return redirect(url_for('login'))
+        
+    application = PassApplication.query.get_or_404(app_id)
+    
+    if request.method == 'POST':
+        application.status = 'Approved'
+        application.validity_start = datetime.utcnow()
+        days = 30 if application.pass_type == 'Monthly' else 90
+        application.validity_end = application.validity_start + timedelta(days=days)
+        
+        qr_data = f"PassID:{application.id}|ValidTill:{application.validity_end.strftime('%Y-%m-%d')}"
+        qr = qrcode.make(qr_data)
+        qr_filename = f"qr_{application.id}.png"
+        qr.save(os.path.join(QR_DIR, qr_filename))
+        
+        application.qr_code_data = qr_filename
         db.session.commit()
         return redirect(url_for('student_dashboard'))
-    return render_template('apply_pass.html')
+        
+    return render_template('payment.html', application=application)
+
+@app.route('/student/pass/<int:app_id>/print')
+def print_pass(app_id):
+    if 'user_id' not in session: return redirect(url_for('login'))
+    application = PassApplication.query.get_or_404(app_id)
+    return render_template('print_pass.html', app=application)
+
+@app.route('/student/renew/<int:app_id>')
+def renew_pass(app_id):
+    if 'user_id' not in session: return redirect(url_for('login'))
+    application = PassApplication.query.get_or_404(app_id)
+    application.status = 'Pending Payment'
+    db.session.commit()
+    return redirect(url_for('student_dashboard'))
+
+@app.route('/routes')
+def bus_routes():
+    routes = [{"bus_no": "K-101", "path": "Kolhapur <-> Ichalkaranji", "frequency": "15m"}]
+    return render_template('routes.html', routes=routes)
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
     if session.get('role') != 'admin': return redirect(url_for('login'))
     apps = PassApplication.query.all()
-    stats = {
-        'total_passes': len(apps), 
-        'active_passes': len([a for a in apps if a.status == 'Approved']),
-        'pending_count': len([a for a in apps if a.status == 'Pending']),
-        'total_revenue': sum([a.fee for a in apps if a.status == 'Approved'])
-    }
+    stats = {'total_passes': len(apps), 'active_passes': len([a for a in apps if a.status == 'Approved']), 'pending_count': len([a for a in apps if a.status == 'Pending']), 'total_revenue': sum(a.fee for a in apps if a.status == 'Approved')}
     return render_template('admin_dashboard.html', applications=apps, stats=stats)
 
 @app.route('/admin/approve/<int:app_id>')
 def approve_pass(app_id):
     if session.get('role') != 'admin': return redirect(url_for('login'))
-    application = PassApplication.query.get(app_id)
-    application.status = 'Approved'
-    application.validity_start = datetime.utcnow()
-    application.validity_end = datetime.utcnow() + timedelta(days=30)
+    application = PassApplication.query.get_or_404(app_id)
+    application.status = 'Pending Payment'
     db.session.commit()
-    flash('Approved!', 'success')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/reject/<int:app_id>')
 def reject_pass(app_id):
     if session.get('role') != 'admin': return redirect(url_for('login'))
-    application = PassApplication.query.get(app_id)
+    application = PassApplication.query.get_or_404(app_id)
     application.status = 'Rejected'
     db.session.commit()
-    flash('Rejected!', 'danger')
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/profile')
-@app.route('/student/profile')
-def student_profile():
-    if 'user_id' not in session: return redirect(url_for('login'))
-    return render_template('profile.html', user=User.query.get(session['user_id']))
-
-@app.route('/pay/<int:app_id>')
-def pay_pass(app_id): return render_template('payment.html', app_id=app_id)
-
-@app.route('/print/<int:app_id>')
-def print_pass(app_id): return render_template('print_pass.html', app=PassApplication.query.get(app_id))
-
-@app.route('/renew/<int:app_id>')
-def renew_pass(app_id): 
-    flash('Renewal request received!', 'info')
-    return redirect(url_for('student_dashboard'))
-
-@app.route('/routes')
-def bus_routes(): 
-    routes_list = [
-        {"bus_no": "K-10", "path": "Kolhapur-Panhala", "frequency": "30m"},
-        {"bus_no": "K-22", "path": "Kolhapur-Kagal", "frequency": "15m"}
-    ]
-    return render_template('routes.html', routes=routes_list)
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('index'))
-
-@app.route('/secret-admin-setup', methods=['GET', 'POST'])
-def secret_admin_setup():
-    if request.method == 'POST':
-        db.session.add(User(email=request.form['email'], password=generate_password_hash(request.form['password']), role='admin'))
-        db.session.commit()
-        return redirect(url_for('login'))
-    return render_template('register_admin.html')
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)
