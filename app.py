@@ -46,30 +46,24 @@ class PassApplication(db.Model):
     validity_end = db.Column(db.DateTime)
 
 # --- TRANSLATIONS DATA (FULL) ---
-TRANSLATIONS = {
+TRANSLATIONS =TRANSLATIONS = {
     'en': {
         'title': 'SmartBus Pass', 'home': 'Home', 'login': 'Login', 'register': 'Register',
-        'dashboard': 'Dashboard', 'logout': 'Logout', 'apply_pass': 'Apply New Pass',
-        'routes': 'Bus Routes', 'profile': 'My Profile', 'renewal': 'Renew Pass',
-        'pay_now': 'Pay Fee', 'view_pass': 'View Digital Pass', 'download_pdf': 'Download PDF',
-        'source': 'Source Village', 'destination': 'Destination', 'pass_type_label': 'Pass Type',
-        'photo_label': 'Your Photo', 'aadhar_label': 'Aadhar Card', 'submit_btn': 'Submit Application'
+        'dashboard': 'Dashboard', 'logout': 'Logout', 'apply_pass': 'Apply',
+        'routes': 'Routes', 'profile': 'Profile', 'approve': 'Fast Approval', 
+        'submit': 'Submit', 'view_pass': 'Digital Pass'
     },
     'hi': {
         'title': 'स्मार्टबस पास', 'home': 'होम', 'login': 'लॉगिन', 'register': 'पंजीकरण',
-        'dashboard': 'डैशबोर्ड', 'logout': 'लॉगआउट', 'apply_pass': 'नया पास आवेदन',
-        'routes': 'बस मार्ग', 'profile': 'मेरी प्रोफाइल', 'renewal': 'पास नवीनीकरण',
-        'pay_now': 'शुल्क भुगतान', 'view_pass': 'डिजिटल पास देखें', 'download_pdf': 'डाउनलोड',
-        'source': 'स्रोत गांव', 'destination': 'गंतव्य', 'pass_type_label': 'पास का प्रकार',
-        'photo_label': 'आपका फोटो', 'aadhar_label': 'आधार कार्ड', 'submit_btn': 'आवेदन जमा करें'
+        'dashboard': 'डैशबोर्ड', 'logout': 'लॉगआउट', 'apply_pass': 'आवेदन',
+        'routes': 'मार्ग', 'profile': 'प्रोफ़ाइल', 'approve': 'तेजी से स्वीकृति', 
+        'submit': 'जमा करें', 'view_pass': 'डिजिटल पास'
     },
     'mr': {
         'title': 'स्मार्टबस पास', 'home': 'होम', 'login': 'लॉगिन', 'register': 'नोंदणी',
-        'dashboard': 'डॅशबोर्ड', 'logout': 'लॉगआउट', 'apply_pass': 'नवीन अर्ज',
-        'routes': 'बस मार्ग', 'profile': 'माझी प्रोफाईल', 'renewal': 'पास नूतनीकरण',
-        'pay_now': 'शुल्क भरा', 'view_pass': 'पास पहा', 'download_pdf': 'डाउनलोड',
-        'source': 'कुठून (गाव)', 'destination': 'कुठे (गंतव्य)', 'pass_type_label': 'पासचा प्रकार',
-        'photo_label': 'तुमचा फोटो', 'aadhar_label': 'आधार कार्ड', 'submit_btn': 'अर्ज सादर करा'
+        'dashboard': 'डॅशबोर्ड', 'logout': 'लॉगआउट', 'apply_pass': 'अर्ज',
+        'routes': 'मार्ग', 'profile': 'प्रोफाईल', 'approve': 'त्वरीत मान्यता', 
+        'submit': 'सादर करा', 'view_pass': 'डिजिटल पास'
     }
 }
 
