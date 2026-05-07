@@ -29,7 +29,7 @@ body {
     flex-direction: column;
 }
 
-/* Navbar */
+/* Navbar Styling */
 .navbar {
     background-color: var(--card-bg);
     padding: 1rem 2rem;
@@ -69,6 +69,7 @@ body {
     color: var(--primary-color);
 }
 
+/* Button Styling */
 .btn {
     padding: 0.6rem 1.2rem;
     border-radius: var(--border-radius);
@@ -78,6 +79,7 @@ body {
     text-decoration: none;
     display: inline-block;
     transition: var(--transition);
+    text-align: center;
 }
 
 .btn-primary {
@@ -96,26 +98,14 @@ body {
     color: white;
 }
 
-.btn-secondary:hover {
-    filter: brightness(0.9);
-}
-
 .btn-danger {
     background-color: var(--danger);
     color: white;
 }
 
-.btn-danger:hover {
-    filter: brightness(0.9);
-}
-
 .btn-success {
     background-color: var(--success);
     color: white;
-}
-
-.btn-success:hover {
-    filter: brightness(0.9);
 }
 
 .btn-outline {
@@ -129,7 +119,7 @@ body {
     color: white;
 }
 
-/* Layout */
+/* Container & Layout */
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -138,205 +128,6 @@ body {
     width: 100%;
 }
 
-/* Forms */
-.card {
-    background: var(--card-bg);
-    border-radius: var(--border-radius);
-    padding: 2.5rem;
-    box-shadow: var(--shadow);
-    width: 100%;
-    max-width: 500px;
-    margin: 2rem auto;
-}
-
-.card h2 {
-    margin-bottom: 1.5rem;
-    text-align: center;
-    color: var(--primary-color);
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-}
-
-.form-group input, .form-group select {
-    width: 100%;
-    padding: 0.8rem 1rem;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: var(--transition);
-}
-
-.form-group input:focus, .form-group select:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
-}
-
-.form-submit {
-    width: 100%;
-    padding: 1rem;
-    font-size: 1.1rem;
-    margin-top: 1rem;
-}
-
-/* Alerts */
-.alerts {
-    margin-bottom: 2rem;
-}
-
-.alert {
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    font-weight: 500;
-}
-
-.alert-success {
-    background-color: #d8f3dc;
-    color: #1b4332;
-    border: 1px solid #b7e4c7;
-}
-
-.alert-danger {
-    background-color: #ffe5d9;
-    color: #9d0208;
-    border: 1px solid #ffcad4;
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeeba;
-}
-
-.alert-info {
-    background-color: #cce5ff;
-    color: #004085;
-    border: 1px solid #b8daff;
-}
-
-/* Dashboard & Tables */
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.table-responsive {
-    overflow-x: auto;
-    background: var(--card-bg);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 1rem 1.5rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-    color: #495057;
-}
-
-tr:last-child td {
-    border-bottom: none;
-}
-
-tr:hover {
-    background-color: #f8f9fa;
-}
-
-.badge {
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.badge-pending {
-    background-color: #fff3cd;
-    color: #856404;
-}
-
-.badge-approved {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.badge-rejected {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-/* Pass Card */
-.pass-card {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: white;
-    border-radius: 16px;
-    padding: 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1rem;
-    box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
-}
-
-.pass-details h3 {
-    margin-bottom: 1rem;
-    font-size: 1.5rem;
-}
-
-.pass-details p {
-    margin-bottom: 0.5rem;
-    font-size: 1.1rem;
-    opacity: 0.9;
-}
-
-.pass-qr {
-    background: white;
-    padding: 10px;
-    border-radius: 12px;
-}
-
-.pass-qr img {
-    display: block;
-    width: 150px;
-    height: 150px;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-/* Footer */
-footer {
-    background-color: var(--card-bg);
-    text-align: center;
-    padding: 1.5rem;
-    margin-top: auto;
-    border-top: 1px solid #eee;
-}
-
-/* Hero Section */
 .hero {
     display: flex;
     flex-direction: column;
@@ -367,7 +158,111 @@ footer {
     gap: 1rem;
 }
 
-/* Digital ID Card */
+/* Cards & Forms */
+.card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 2.5rem;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 500px;
+    margin: 2rem auto;
+}
+
+.card h2 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+.form-submit {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    margin-top: 1rem;
+}
+
+/* Tables */
+.table-responsive {
+    overflow-x: auto;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Badges */
+.badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.badge-approved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Digital ID Card (Pass Styling) */
 .digital-id-card {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     border-radius: 16px;
@@ -375,8 +270,12 @@ footer {
     width: 320px;
     overflow: hidden;
     color: white;
-    font-family: 'Inter', sans-serif;
     margin: 1rem auto;
+    transition: var(--transition);
+}
+
+.digital-id-card:hover {
+    transform: translateY(-5px);
 }
 
 .id-header {
@@ -426,17 +325,6 @@ footer {
     object-fit: cover;
 }
 
-.placeholder-photo {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #eee;
-    color: #999;
-    font-size: 0.7rem;
-}
-
 .id-details h4 {
     margin: 0 0 0.5rem 0;
     font-size: 1.1rem;
@@ -467,4 +355,39 @@ footer {
     font-weight: bold;
     font-size: 0.9rem;
     text-transform: uppercase;
+}
+
+/* Grid System */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+/* Footer Styling */
+footer {
+    background-color: var(--card-bg);
+    text-align: center;
+    padding: 1.5rem;
+    margin-top: auto;
+    border-top: 1px solid #eee;
+}
+
+/* Alerts and Messages */
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+.alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .navbar { flex-direction: column; padding: 1rem; }
+    .nav-links { margin-top: 1rem; flex-wrap: wrap; justify-content: center; }
+    .hero h1 { font-size: 2rem; }
 }
