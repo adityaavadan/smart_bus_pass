@@ -301,6 +301,16 @@ def reject_pass(app_id):
     application.status = 'Rejected'
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
+    with app.app_context():
+    db.create_all()
+    # This part creates the admin automatically if it doesn't exist
+    admin = User.query.filter_by(email='admin@buspass.com').first()
+    if not admin:
+        hashed_pw = generate_password_hash('admin123')
+        new_admin = User(email='admin@buspass.com', password=hashed_pw, role='admin')
+        db.session.add(new_admin)
+        db.session.commit()
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
