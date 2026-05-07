@@ -1,63 +1,37 @@
-{% extends "base.html" %}
-{% block title %}{{ t.title }}{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Welcome - SmartPass{% endblock %}
 
 {% block content %}
-<!-- Minimalist Hero -->
-<div class="container py-5 mt-5">
-    <div class="row align-items-center">
-        <div class="col-lg-6 animate__animated animate__fadeInLeft">
-            <h1 class="display-3 font-weight-bold text-dark mb-3">{{ t.title }}</h1>
-            <p class="lead text-muted mb-5" style="font-size: 1.4rem; line-height: 1.6;">
-                The modern way to travel in Kolhapur. Apply, verify, and carry your digital bus pass anywhere.
-            </p>
-            <div class="d-flex">
-                {% if not session.get('user_id') %}
-                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5 py-3 shadow-sm rounded-pill font-weight-bold mr-3">{{ t.register }}</a>
-                <a href="{{ url_for('login') }}" class="btn btn-light btn-lg px-5 py-3 rounded-pill font-weight-bold">{{ t.login }}</a>
-                {% else %}
-                <a href="{{ url_for('student_dashboard' if session.role == 'student' else 'admin_dashboard') }}" class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-sm font-weight-bold">{{ t.dashboard }}</a>
-                {% endif %}
-            </div>
-        </div>
-        <div class="col-lg-6 d-none d-lg-block animate__animated animate__fadeInRight text-center">
-            <img src="https://cdn-icons-png.flaticon.com/512/3066/3066256.png" class="img-fluid" style="max-height: 400px; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.1));">
-        </div>
+<div class="hero">
+    <h1>{{ t.title }}</h1>
+    <p>Skip the queues. Apply, renew, and manage your bus pass online. Get your digital smart pass with a secure QR code in minutes.</p>
+    <div class="hero-buttons">
+        {% if not session.get('user_id') %}
+        <a href="{{ url_for('register') }}" class="btn btn-primary" style="font-size: 1.2rem; padding: 0.8rem 2rem;">{{ t.register }}</a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline" style="font-size: 1.2rem; padding: 0.8rem 2rem;">{{ t.login }}</a>
+        {% else %}
+            {% if session.get('role') == 'admin' %}
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary" style="font-size: 1.2rem; padding: 0.8rem 2rem;">{{ t.dashboard }}</a>
+            {% else %}
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary" style="font-size: 1.2rem; padding: 0.8rem 2rem;">{{ t.dashboard }}</a>
+            {% endif %}
+        {% endif %}
     </div>
 </div>
 
-<!-- Clean Steps Section -->
-<div class="bg-white py-5 mt-5">
-    <div class="container py-5">
-        <div class="row text-center">
-            <div class="col-md-4 mb-5">
-                <div class="p-4">
-                    <div class="text-primary h1 mb-4"><i class="fas fa-edit"></i></div>
-                    <h4 class="font-weight-bold text-dark">1. {{ t.register }}</h4>
-                    <p class="text-muted small">Quick registration with OTP verification.</p>
-                </div>
-            </div>
-            <div class="col-md-4 mb-5">
-                <div class="p-4">
-                    <div class="text-success h1 mb-4"><i class="fas fa-check-double"></i></div>
-                    <h4 class="font-weight-bold text-dark">2. {{ t.approve }}</h4>
-                    <p class="text-muted small">Fast online approval from administration.</p>
-                </div>
-            </div>
-            <div class="col-md-4 mb-5">
-                <div class="p-4">
-                    <div class="text-info h1 mb-4"><i class="fas fa-id-card"></i></div>
-                    <h4 class="font-weight-bold text-dark">3. {{ t.view_pass }}</h4>
-                    <p class="text-muted small">Your digital pass is ready on your phone.</p>
-                </div>
-            </div>
-        </div>
+<div class="grid" style="margin-top: 4rem;">
+    <div class="card" style="margin: 0;">
+        <h3 style="color: var(--primary-color); margin-bottom: 1rem; text-align: left;">1. {{ t.register }} & {{ t.submit }}</h3>
+        <p>Create an account and submit your pass application online with source and destination details.</p>
+    </div>
+    <div class="card" style="margin: 0;">
+        <h3 style="color: var(--secondary-color); margin-bottom: 1rem; text-align: left;">2. {{ t.approve }}</h3>
+        <p>Admins verify details and instantly approve or reject passes without any paperwork.</p>
+    </div>
+    <div class="card" style="margin: 0;">
+        <h3 style="color: var(--success); margin-bottom: 1rem; text-align: left;">3. {{ t.view_pass }}</h3>
+        <p>Get a digital pass with a verifiable QR code to show directly on your mobile device.</p>
     </div>
 </div>
-
-<style>
-    body { background-color: #ffffff; }
-    .btn-primary { background-color: #007bff; border: none; }
-    .btn-light { background-color: #f8f9fa; border: 1px solid #dee2e6; color: #495057; }
-    h1 { color: #1a1a1a !important; }
-</style>
 {% endblock %}
