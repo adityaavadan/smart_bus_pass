@@ -303,6 +303,7 @@ def reject_pass(app_id):
     return redirect(url_for('admin_dashboard'))
     with app.app_context():
     db.create_all()
+    
     # This part creates the admin automatically if it doesn't exist
     admin = User.query.filter_by(email='admin@buspass.com').first()
     if not admin:
