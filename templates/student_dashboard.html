@@ -1,102 +1,117 @@
-{% extends "base.html" %}
-{% block title %}Student Dashboard{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}{{ t.dashboard }} - SmartPass{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-5" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh;">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-5 animate__animated animate__fadeInDown">
-            <div>
-                <h1 class="display-4 font-weight-bold text-dark">{{ t.dashboard }}</h1>
-                <p class="text-muted">Welcome back, {{ user.email }}</p>
-            </div>
-            <a href="{{ url_for('apply_pass') }}" class="btn btn-primary btn-lg shadow-lg px-5 rounded-pill animate__animated animate__pulse animate__infinite">
-                <i class="fas fa-plus-circle mr-2"></i> {{ t.apply_pass }}
-            </a>
-        </div>
-
-        {% if expiring_soon %}
-        <div class="alert alert-glass border-0 shadow-sm animate__animated animate__shakeX mb-4" style="background: rgba(255, 193, 7, 0.2); backdrop-filter: blur(10px); border-left: 5px solid #ffc107 !important;">
-            <div class="d-flex align-items-center">
-                <i class="fas fa-exclamation-triangle fa-2x mr-3 text-warning"></i>
-                <div>
-                    <h5 class="mb-0">Expiry Warning!</h5>
-                    <p class="mb-0 small">One of your passes is expiring within 3 days. Please renew it now.</p>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <div class="row">
-            {% if applications %}
-                {% for app in applications %}
-                <div class="col-xl-6 mb-4 animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.1 }}s">
-                    <div class="card border-0 shadow-lg overflow-hidden" style="border-radius: 20px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(15px);">
-                        <div class="card-header border-0 d-flex justify-content-between align-items-center p-4 {% if app.status == 'Approved' %}bg-success{% elif app.status == 'Rejected' %}bg-danger{% else %}bg-warning{% endif %} text-white">
-                            <span class="font-weight-bold"><i class="fas fa-id-card mr-2"></i> PASS ID: #{{ app.id }}</span>
-                            <span class="badge badge-light px-3 py-2 rounded-pill text-uppercase" style="letter-spacing: 1px;">{{ app.status }}</span>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="row align-items-center">
-                                <div class="col-lg-8">
-                                    <h3 class="font-weight-bold text-dark mb-1">{{ app.pass_type }} Pass</h3>
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-light rounded-circle p-2 mr-2"><i class="fas fa-map-marker-alt text-primary"></i></div>
-                                        <span class="h5 mb-0">{{ app.source }} <i class="fas fa-arrow-right mx-2 text-muted small"></i> {{ app.destination }}</span>
-                                    </div>
-                                    <hr>
-                                    <div class="row no-gutters">
-                                        <div class="col-6">
-                                            <p class="text-muted small mb-0">Issued On</p>
-                                            <p class="font-weight-bold">{{ app.created_at.strftime('%d %b, %Y') }}</p>
-                                        </div>
-                                        <div class="col-6">
-                                            <p class="text-muted small mb-0">Valid Until</p>
-                                            <p class="font-weight-bold text-primary">{{ app.validity_end.strftime('%d %b, %Y') if app.validity_end else 'N/A' }}</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mt-4 d-flex">
-                                        {% if app.status == 'Approved' %}
-                                        <a href="{{ url_for('print_pass', app_id=app.id) }}" class="btn btn-dark rounded-pill px-4 mr-2 shadow-sm">
-                                            <i class="fas fa-qrcode mr-2"></i> View Digital Pass
-                                        </a>
-                                        <a href="{{ url_for('renew_pass', app_id=app.id) }}" class="btn btn-outline-primary rounded-pill px-4">
-                                            <i class="fas fa-sync-alt mr-2"></i> Renew
-                                        </a>
-                                        {% elif app.status == 'Pending' %}
-                                        <div class="text-muted font-italic small"><i class="fas fa-clock mr-1"></i> Waiting for Admin to verify your documents...</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="col-lg-4 text-center d-none d-lg-block">
-                                    <div class="profile-image-container p-2 bg-white shadow-sm rounded" style="display: inline-block; transform: rotate(3deg);">
-                                        <img src="{{ url_for('static', filename='uploads/' + app.profile_pic_filename) if app.profile_pic_filename else url_for('static', filename='default.png') }}" class="img-fluid rounded" style="width: 140px; height: 160px; object-fit: cover;">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="col-12 text-center py-5 animate__animated animate__zoomIn">
-                    <div class="glass-card p-5 rounded-lg shadow-lg" style="background: rgba(255,255,255,0.7); backdrop-filter: blur(10px);">
-                        <img src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png" style="width: 150px;" class="mb-4">
-                        <h2 class="font-weight-bold">No Active Passes Found</h2>
-                        <p class="text-muted lead">You haven't applied for any bus passes yet. Start your application now!</p>
-                        <a href="{{ url_for('apply_pass') }}" class="btn btn-primary btn-lg rounded-pill px-5 mt-3 shadow-lg">Apply My First Pass</a>
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-    </div>
+<div class="dashboard-header">
+    <h2>{{ t.dashboard }}</h2>
+    <a href="{{ url_for('apply_pass') }}" class="btn btn-primary">+ {{ t.apply_pass }}</a>
 </div>
 
-<style>
-    .btn-primary { background: linear-gradient(45deg, #4e73df, #224abe); border: none; }
-    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(78,115,223,0.3); }
-    .card { transition: all 0.3s cubic-bezier(.25,.8,.25,1); }
-    .card:hover { transform: translateY(-10px); box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important; }
-    .alert-glass { border: none; }
-</style>
+{% if expiring_soon %}
+    <div class="alert alert-warning" style="border-left: 5px solid #856404; background-color: #fff3cd; color: #856404; margin-bottom: 2rem;">
+        <strong>📢 {{ t.expiring_soon_msg }}</strong>
+    </div>
+{% endif %}
+
+{% if applications %}
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Pass ID</th>
+                    <th>Route</th>
+                    <th>{{ t.pass_type }}</th>
+                    <th>{{ t.status }}</th>
+                    <th>{{ t.action }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td>#{{ app.id }}</td>
+                    <td>{{ app.source }} &rarr; {{ app.destination }}</td>
+                    <td>{{ app.pass_type }}</td>
+                    <td>
+                        {% if app.status == 'Pending Payment' %}
+                            <span class="badge" style="background-color: #cce5ff; color: #004085;">{{ t.pay_now }}</span>
+                        {% elif app.status == 'Expired' %}
+                            <span class="badge" style="background-color: #6c757d; color: #ffffff;">{{ t.expiry }}</span>
+                        {% else %}
+                            <span class="badge badge-{{ app.status.lower().replace(' ', '-') }}">
+                                {% if app.status == 'Pending' %}{{ t.pending }}
+                                {% elif app.status == 'Approved' %}{{ t.approve }}
+                                {% elif app.status == 'Rejected' %}{{ t.reject }}
+                                {% else %}{{ app.status }}{% endif %}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if app.status == 'Pending Payment' %}
+                            <a href="{{ url_for('pay_pass', app_id=app.id) }}" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.9rem; background-color: var(--success);">{{ t.pay_now }}</a>
+                        {% elif app.status == 'Approved' and app.qr_code_data %}
+                            <a href="#pass-{{ app.id }}" class="btn btn-success" style="padding: 0.3rem 0.8rem; font-size: 0.9rem;">{{ t.view_pass }}</a>
+                            <a href="{{ url_for('print_pass', app_id=app.id) }}" target="_blank" class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.9rem; margin-left: 0.5rem;">{{ t.download_pdf }}</a>
+                            
+                            {% if (app.validity_end - datetime.utcnow()).days <= 3 %}
+                                <a href="{{ url_for('renew_pass', app_id=app.id) }}" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.9rem; background-color: #6f42c1; margin-left: 0.5rem;">{{ t.renew }}</a>
+                            {% endif %}
+                        {% elif app.status == 'Expired' %}
+                            <a href="{{ url_for('renew_pass', app_id=app.id) }}" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.9rem; background-color: #6f42c1;">{{ t.renew }}</a>
+                        {% elif app.status == 'Pending' %}
+                            <em>{{ t.pending }}</em>
+                        {% else %}
+                            <em>-</em>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 3rem;">
+        <h3>My Active Digital Passes</h3>
+        <div class="grid" style="margin-top: 1.5rem;">
+            {% for app in applications %}
+                {% if app.status == 'Approved' %}
+                    <div id="pass-{{ app.id }}" class="digital-id-card">
+                        <div class="id-header">
+                            <h3>SMART PASS</h3>
+                            <span class="id-type">{{ app.pass_type }}</span>
+                        </div>
+                        <div class="id-body">
+                            <div class="id-photo">
+                                {% if app.profile_pic_filename %}
+                                    <img src="{{ url_for('static', filename='uploads/' + app.profile_pic_filename) }}" alt="Profile Photo">
+                                {% else %}
+                                    <div class="placeholder-photo">No Photo</div>
+                                {% endif %}
+                            </div>
+                            <div class="id-details">
+                                <h4>{{ app.student.full_name or app.student.email }}</h4>
+                                <p><strong>ID:</strong> #{{ app.id }}</p>
+                                <p><strong>Route:</strong> {{ app.source }} &rarr; {{ app.destination }}</p>
+                                <p><strong>Valid Till:</strong> <span style="color: #ffcccc;">{{ app.validity_end.strftime('%d %b %Y') }}</span></p>
+                            </div>
+                        </div>
+                        <div class="id-footer">
+                            <div class="id-qr">
+                                <img src="{{ url_for('static', filename='qrcodes/' + app.qr_code_data) }}" alt="QR Code">
+                            </div>
+                            <div class="id-scan-text">Scan to verify</div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+{% else %}
+    <div class="card" style="text-align: center; max-width: 100%;">
+        <h3 style="color: #6c757d; margin-bottom: 1rem;">No applications found.</h3>
+        <p>You haven't applied for a bus pass yet.</p>
+        <br>
+        <a href="{{ url_for('apply_pass') }}" class="btn btn-primary">Apply Now</a>
+    </div>
+{% endif %}
 {% endblock %}
