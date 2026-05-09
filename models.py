@@ -7,7 +7,10 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(10), nullable=False, default='student')
+    role = db.Column(db.String(10), nullable=False, default='student') 
+    full_name = db.Column(db.String(100), nullable=True)
+    phone_number = db.Column(db.String(20), nullable=True)
+    address = db.Column(db.String(200), nullable=True)
     applications = db.relationship('PassApplication', backref='student', lazy=True)
 
 class PassApplication(db.Model):
@@ -16,9 +19,14 @@ class PassApplication(db.Model):
     pass_type = db.Column(db.String(50), nullable=False)
     source = db.Column(db.String(100), nullable=False)
     destination = db.Column(db.String(100), nullable=False)
-    status = db.Column(db.String(20), default='Pending')
-    fee = db.Column(db.Integer, default=250)
-    profile_pic_filename = db.Column(db.String(255))
-    aadhar_pic_filename = db.Column(db.String(255))
+    status = db.Column(db.String(20), nullable=False, default='Pending')
+    fee = db.Column(db.Integer, nullable=False, default=0)
+    profile_pic_filename = db.Column(db.String(255), nullable=True)
+    aadhar_pic_filename = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    validity_end = db.Column(db.DateTime)
+    validity_start = db.Column(db.DateTime, nullable=True)
+    validity_end = db.Column(db.DateTime, nullable=True)
+    qr_code_data = db.Column(db.String(255), nullable=True)
+
+    def __repr__(self):
+        return f'<PassApplication {self.id} - {self.status}>'
