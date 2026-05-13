@@ -1,6 +1,6 @@
 import os
 import random
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import qrcode
@@ -223,12 +223,9 @@ def apply_pass():
             return redirect(request.url)
             
         if profile_file and allowed_file(profile_file.filename) and aadhar_file and allowed_file(aadhar_file.filename):
-            timestamp = int(datetime.utcnow().timestamp())
-            profile_filename = secure_filename(f"user_{session['user_id']}_{timestamp}_photo_{profile_file.filename}")
-            aadhar_filename = secure_filename(f"user_{session['user_id']}_{timestamp}_aadhar_{aadhar_file.filename}")
-            
-            profile_file.save(os.path.join(UPLOAD_DIR, profile_filename))
-            aadhar_file.save(os.path.join(UPLOAD_DIR, aadhar_filename))
+            # Read binary data for Database Storage
+            profile_data = profile_file.read()
+            aadhar_data = aadhar_file.read()
             
             # Dynamic Fee Calculation based on route length
             base_fee = 100 + (len(source) + len(destination)) * 15
@@ -240,8 +237,8 @@ def apply_pass():
                 pass_type=pass_type,
                 source=source,
                 destination=destination,
-                profile_pic_filename=profile_filename,
-                aadhar_pic_filename=aadhar_filename,
+                profile_pic_data=profile_data,
+                aadhar_pic_data=aadhar_data,
                 fee=base_fee
             )
             db.session.add(new_app)
@@ -341,42 +338,3 @@ def admin_dashboard():
     total_approved = PassApplication.query.filter_by(status='Approved').count()
     pending_count = PassApplication.query.filter_by(status='Pending').count()
     
-    # Calculate revenue manually since SQLite func.sum can be tricky with types sometimes
-    approved_apps = PassApplication.query.filter_by(status='Approved').all()
-    total_revenue = sum(app.fee for app in approved_apps)
-    
-    stats = {
-        'total_passes': total_passes,
-        'active_passes': total_approved,
-        'pending_count': pending_count,
-        'total_revenue': total_revenue
-    }
-    
-    applications = PassApplication.query.order_by(PassApplication.created_at.desc()).all()
-    return render_template('admin_dashboard.html', applications=applications, stats=stats)
-
-@app.route('/admin/approve/<int:app_id>')
-def approve_pass(app_id):
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return redirect(url_for('login'))
-        
-    application = PassApplication.query.get_or_404(app_id)
-    application.status = 'Pending Payment'
-    db.session.commit()
-    flash(f'Application {app_id} approved. Awaiting payment from student.', 'success')
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/reject/<int:app_id>')
-def reject_pass(app_id):
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return redirect(url_for('login'))
-        
-    application = PassApplication.query.get_or_404(app_id)
-    application.status = 'Rejected'
-    db.session.commit()
-    flash(f'Application {app_id} rejected!', 'warning')
-    return redirect(url_for('admin_dashboard'))
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
-    app.run(debug=True, host='0.0.0.0', port=port)
