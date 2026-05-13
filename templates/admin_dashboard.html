@@ -47,7 +47,7 @@
                 <td><strong>{{ app.student.email }}</strong></td>
                 <td>
                     {% if app.profile_pic_filename %}
-                        <img src="{{ url_for('static', filename='uploads/' + app.profile_pic_filename) }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" alt="Photo">
+                        <img src="{{ url_for('get_image', app_id=app.id, type='profile') }}"style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" alt="Photo">
                     {% else %}
                         <span style="font-size: 0.8rem; color: #999;">No Photo</span>
                     {% endif %}
