@@ -5,7 +5,7 @@
 {% block content %}
 <div class="hero">
     <h1>{{ t.title }}</h1>
-    <p>Skip the queues. Apply, renew, and manage your bus pass online. Get your digital smart pass with a secure QR code in minutes.</p>
+    <p>{{ t.hero_text }}</p>
     <div class="hero-buttons">
         {% if not session.get('user_id') %}
         <a href="{{ url_for('register') }}" class="btn btn-primary" style="font-size: 1.2rem; padding: 0.8rem 2rem;">{{ t.register }}</a>
@@ -22,16 +22,16 @@
 
 <div class="grid" style="margin-top: 4rem;">
     <div class="card" style="margin: 0;">
-        <h3 style="color: var(--primary-color); margin-bottom: 1rem; text-align: left;">1. {{ t.register }} & {{ t.submit }}</h3>
-        <p>Create an account and submit your pass application online with source and destination details.</p>
+        <h3 style="color: var(--primary-color); margin-bottom: 1rem; text-align: left;">{{ t.step1_title }}</h3>
+        <p>{{ t.step1_text }}</p>
     </div>
     <div class="card" style="margin: 0;">
-        <h3 style="color: var(--secondary-color); margin-bottom: 1rem; text-align: left;">2. {{ t.approve }}</h3>
-        <p>Admins verify details and instantly approve or reject passes without any paperwork.</p>
+        <h3 style="color: var(--secondary-color); margin-bottom: 1rem; text-align: left;">{{ t.step2_title }}</h3>
+        <p>{{ t.step2_text }}</p>
     </div>
     <div class="card" style="margin: 0;">
-        <h3 style="color: var(--success); margin-bottom: 1rem; text-align: left;">3. {{ t.view_pass }}</h3>
-        <p>Get a digital pass with a verifiable QR code to show directly on your mobile device.</p>
+        <h3 style="color: var(--success); margin-bottom: 1rem; text-align: left;">{{ t.step3_title }}</h3>
+        <p>{{ t.step3_text }}</p>
     </div>
 </div>
 {% endblock %}
