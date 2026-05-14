@@ -11,6 +11,9 @@ from translations import TRANSLATIONS, KOLHAPUR_VILLAGES
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_for_bus_pass'
+# Set session to last for 30 days
+app.permanent_session_lifetime = timedelta(days=30)
+
 # PostgreSQL for Render, SQLite for Local
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///buspass.db')
 if app.config['SQLALCHEMY_DATABASE_URI'] and app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
@@ -36,8 +39,8 @@ def check_expirations():
         PassApplication.status == 'Approved',
         PassApplication.validity_end < datetime.utcnow()
     ).all()
-    for app in expired_apps:
-        app.status = 'Expired'
+    for app_item in expired_apps:
+        app_item.status = 'Expired'
     if expired_apps:
         db.session.commit()
 
@@ -143,6 +146,7 @@ def login():
         
         user = User.query.filter_by(email=email).first()
         if user and check_password_hash(user.password, password):
+            session.permanent = True # Set session to stay logged in
             session['user_id'] = user.id
             session['email'] = user.email
             session['role'] = user.role
@@ -333,8 +337,53 @@ def admin_dashboard():
         
     check_expirations()
     
-    # Analytics
     total_passes = PassApplication.query.count()
     total_approved = PassApplication.query.filter_by(status='Approved').count()
     pending_count = PassApplication.query.filter_by(status='Pending').count()
     
+    approved_apps = PassApplication.query.filter_by(status='Approved').all()
+    total_revenue = sum(app.fee for app in approved_apps)
+    
+    stats = {
+        'total_passes': total_passes,
+        'active_passes': total_approved,
+        'pending_count': pending_count,
+        'total_revenue': total_revenue
+    }
+    
+    applications = PassApplication.query.order_by(PassApplication.created_at.desc()).all()
+    return render_template('admin_dashboard.html', applications=applications, stats=stats)
+
+@app.route('/admin/approve/<int:app_id>')
+def approve_pass(app_id):
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('login'))
+        
+    application = PassApplication.query.get_or_404(app_id)
+    application.status = 'Pending Payment'
+    db.session.commit()
+    flash(f'Application {app_id} approved.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/reject/<int:app_id>')
+def reject_pass(app_id):
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('login'))
+        
+    application = PassApplication.query.get_or_404(app_id)
+    application.status = 'Rejected'
+    db.session.commit()
+    flash(f'Application {app_id} rejected.', 'warning')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/get-image/<int:app_id>/<type>')
+def get_image(app_id, type):
+    app_item = PassApplication.query.get_or_404(app_id)
+    if type == 'profile':
+        return Response(app_item.profile_pic_data, mimetype='image/jpeg')
+    else:
+        return Response(app_item.aadhar_pic_data, mimetype='image/jpeg')
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8080))
+    app.run(debug=True, host='0.0.0.0', port=port)
