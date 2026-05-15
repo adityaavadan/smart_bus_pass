@@ -52,10 +52,6 @@
                         {% elif app.status == 'Approved' and app.qr_code_data %}
                             <a href="#pass-{{ app.id }}" class="btn btn-success" style="padding: 0.3rem 0.8rem; font-size: 0.9rem;">{{ t.view_pass }}</a>
                             <a href="{{ url_for('print_pass', app_id=app.id) }}" target="_blank" class="btn btn-outline" style="padding: 0.3rem 0.8rem; font-size: 0.9rem; margin-left: 0.5rem;">{{ t.download_pdf }}</a>
-                            
-                            {% if (app.validity_end - datetime.utcnow()).days <= 3 %}
-                                <a href="{{ url_for('renew_pass', app_id=app.id) }}" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.9rem; background-color: #6f42c1; margin-left: 0.5rem;">{{ t.renew }}</a>
-                            {% endif %}
                         {% elif app.status == 'Expired' %}
                             <a href="{{ url_for('renew_pass', app_id=app.id) }}" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.9rem; background-color: #6f42c1;">{{ t.renew }}</a>
                         {% elif app.status == 'Pending' %}
@@ -71,7 +67,7 @@
     </div>
 
     <div style="margin-top: 3rem;">
-        <h3>My Active Digital Passes</h3>
+        <h3>{{ t.active_passes }}</h3>
         <div class="grid" style="margin-top: 1.5rem;">
             {% for app in applications %}
                 {% if app.status == 'Approved' %}
@@ -82,9 +78,8 @@
                         </div>
                         <div class="id-body">
                             <div class="id-photo">
-                                {% if app.profile_pic_filename %}
+                                {% if app.profile_pic_data %}
                                     <img src="{{ url_for('get_image', app_id=app.id, type='profile') }}" alt="Profile Photo">
-
                                 {% else %}
                                     <div class="placeholder-photo">No Photo</div>
                                 {% endif %}
