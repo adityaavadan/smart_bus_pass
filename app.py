@@ -332,21 +332,12 @@ def bus_routes():
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return redirect(url_for('login'))
-        
-    check_expirations()
+    # ... existing code ...
     
-    # Stats Calculation
-    applications = PassApplication.query.all()
-    total_passes = len(applications)
-    total_approved = len([a for a in applications if a.status == 'Approved'])
-    pending_count = len([a for a in applications if a.status == 'Pending'])
-    total_revenue = sum(a.fee for a in applications if a.status == 'Approved')
-    
-    # Chart Data: Pass Types
+    # Chart Data: Pass Types (Added Yearly)
     monthly_count = len([a for a in applications if a.pass_type == 'Monthly'])
     quarterly_count = len([a for a in applications if a.pass_type == 'Quarterly'])
+    yearly_count = len([a for a in applications if a.pass_type == 'Yearly'])
     
     stats = {
         'total_passes': total_passes,
@@ -354,10 +345,12 @@ def admin_dashboard():
         'pending_count': pending_count,
         'total_revenue': total_revenue,
         'monthly_count': monthly_count,
-        'quarterly_count': quarterly_count
+        'quarterly_count': quarterly_count,
+        'yearly_count': yearly_count
     }
     
     return render_template('admin_dashboard.html', applications=applications, stats=stats)
+
 
 
 @app.route('/admin/approve/<int:app_id>')
