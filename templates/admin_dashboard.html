@@ -47,7 +47,8 @@
                 <td><strong>{{ app.student.email }}</strong></td>
                 <td>
                     {% if app.profile_pic_filename %}
-                        <img src="{{ url_for('get_image', app_id=app.id, type='profile') }}"style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" alt="Photo">
+                       <img src="{{ url_for('get_image', app_id=app.id, type='profile') }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" alt="Photo">
+"style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" alt="Photo">
                     {% else %}
                         <span style="font-size: 0.8rem; color: #999;">No Photo</span>
                     {% endif %}
@@ -55,7 +56,8 @@
                 <td>
                     {% if app.aadhar_pic_filename %}
                         <a href="{{ url_for('static', filename='uploads/' + app.aadhar_pic_filename) }}" target="_blank">
-                            <img src="{{ url_for('static', filename='uploads/' + app.aadhar_pic_filename) }}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;" alt="Aadhar">
+                           <img src="{{ url_for('get_image', app_id=app.id, type='aadhar') }}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;" alt="Aadhar">
+" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;" alt="Aadhar">
                         </a>
                     {% else %}
                         <span style="font-size: 0.8rem; color: #999;">No Aadhar</span>
