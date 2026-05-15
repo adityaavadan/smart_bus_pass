@@ -337,22 +337,28 @@ def admin_dashboard():
         
     check_expirations()
     
-    total_passes = PassApplication.query.count()
-    total_approved = PassApplication.query.filter_by(status='Approved').count()
-    pending_count = PassApplication.query.filter_by(status='Pending').count()
+    # Stats Calculation
+    applications = PassApplication.query.all()
+    total_passes = len(applications)
+    total_approved = len([a for a in applications if a.status == 'Approved'])
+    pending_count = len([a for a in applications if a.status == 'Pending'])
+    total_revenue = sum(a.fee for a in applications if a.status == 'Approved')
     
-    approved_apps = PassApplication.query.filter_by(status='Approved').all()
-    total_revenue = sum(app.fee for app in approved_apps)
+    # Chart Data: Pass Types
+    monthly_count = len([a for a in applications if a.pass_type == 'Monthly'])
+    quarterly_count = len([a for a in applications if a.pass_type == 'Quarterly'])
     
     stats = {
         'total_passes': total_passes,
         'active_passes': total_approved,
         'pending_count': pending_count,
-        'total_revenue': total_revenue
+        'total_revenue': total_revenue,
+        'monthly_count': monthly_count,
+        'quarterly_count': quarterly_count
     }
     
-    applications = PassApplication.query.order_by(PassApplication.created_at.desc()).all()
     return render_template('admin_dashboard.html', applications=applications, stats=stats)
+
 
 @app.route('/admin/approve/<int:app_id>')
 def approve_pass(app_id):
