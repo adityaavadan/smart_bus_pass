@@ -383,15 +383,15 @@ def get_image(app_id, type):
         return Response(app_item.profile_pic_data, mimetype='image/jpeg')
     else:
         return Response(app_item.aadhar_pic_data, mimetype='image/jpeg')
-        @app.route('/fix-my-db')
+
+@app.route('/fix-my-db')
 def fix_my_db():
     try:
-        db.drop_all()   # This deletes the broken old tables
-        db.create_all() # This creates the new tables for your photos
+        db.drop_all()
+        db.create_all()
         return "✅ SUCCESS: Your database is fixed! You can now Register and Login."
     except Exception as e:
         return f"❌ ERROR: {str(e)}"
-
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
