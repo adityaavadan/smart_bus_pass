@@ -83,7 +83,8 @@
                         <div class="id-body">
                             <div class="id-photo">
                                 {% if app.profile_pic_filename %}
-                                    <imgsrc="{{ url_for('get_image', app_id=app.id, type='profile') }}"alt="Profile Photo">
+                                    <img src="{{ url_for('get_image', app_id=app.id, type='profile') }}" alt="Profile Photo">
+
                                 {% else %}
                                     <div class="placeholder-photo">No Photo</div>
                                 {% endif %}
