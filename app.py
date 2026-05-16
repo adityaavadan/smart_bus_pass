@@ -26,8 +26,6 @@ db.init_app(app)
 
 QR_DIR = os.path.join(app.root_path, 'static', 'qrcodes')
 os.makedirs(QR_DIR, exist_ok=True)
-UPLOAD_DIR = os.path.join(app.root_path, 'static', 'uploads')
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
@@ -235,6 +233,8 @@ def apply_pass():
             base_fee = 100 + (len(source) + len(destination)) * 15
             if pass_type == 'Quarterly':
                 base_fee = int(base_fee * 2.5)
+            elif pass_type == 'Yearly':
+                base_fee = int(base_fee * 8)
             
             new_app = PassApplication(
                 user_id=session['user_id'],
@@ -269,7 +269,14 @@ def pay_pass(app_id):
     if request.method == 'POST':
         application.status = 'Approved'
         application.validity_start = datetime.utcnow()
-        days = 30 if application.pass_type == 'Monthly' else 90
+        
+        if application.pass_type == 'Monthly':
+            days = 30
+        elif application.pass_type == 'Quarterly':
+            days = 90
+        else: # Yearly
+            days = 365
+            
         application.validity_end = application.validity_start + timedelta(days=days)
         
         qr_data = f"PassID:{application.id}|Email:{application.student.email}|ValidTill:{application.validity_end.strftime('%Y-%m-%d')}"
@@ -322,76 +329,4 @@ def renew_pass(app_id):
 def bus_routes():
     # Simulated route data for Kolhapur
     routes = [
-        {"bus_no": "K-101", "path": "Kolhapur City <-> Ichalkaranji", "frequency": "Every 15 mins"},
-        {"bus_no": "K-102", "path": "Kolhapur City <-> Panhala", "frequency": "Every 30 mins"},
-        {"bus_no": "K-201", "path": "Kagal <-> Gadhinglaj", "frequency": "Every 1 hour"},
-        {"bus_no": "K-305", "path": "Hupari <-> Jaysingpur", "frequency": "Every 20 mins"},
-        {"bus_no": "K-400", "path": "Karveer <-> Radhanagari", "frequency": "Twice a day"},
-    ]
-    return render_template('routes.html', routes=routes)
-
-@app.route('/admin/dashboard')
-def admin_dashboard():
-    # ... existing code ...
-    
-    # Chart Data: Pass Types (Added Yearly)
-    monthly_count = len([a for a in applications if a.pass_type == 'Monthly'])
-    quarterly_count = len([a for a in applications if a.pass_type == 'Quarterly'])
-    yearly_count = len([a for a in applications if a.pass_type == 'Yearly'])
-    
-    stats = {
-        'total_passes': total_passes,
-        'active_passes': total_approved,
-        'pending_count': pending_count,
-        'total_revenue': total_revenue,
-        'monthly_count': monthly_count,
-        'quarterly_count': quarterly_count,
-        'yearly_count': yearly_count
-    }
-    
-    return render_template('admin_dashboard.html', applications=applications, stats=stats)
-
-
-
-@app.route('/admin/approve/<int:app_id>')
-def approve_pass(app_id):
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return redirect(url_for('login'))
-        
-    application = PassApplication.query.get_or_404(app_id)
-    application.status = 'Pending Payment'
-    db.session.commit()
-    flash(f'Application {app_id} approved.', 'success')
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/reject/<int:app_id>')
-def reject_pass(app_id):
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return redirect(url_for('login'))
-        
-    application = PassApplication.query.get_or_404(app_id)
-    application.status = 'Rejected'
-    db.session.commit()
-    flash(f'Application {app_id} rejected.', 'warning')
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/get-image/<int:app_id>/<type>')
-def get_image(app_id, type):
-    app_item = PassApplication.query.get_or_404(app_id)
-    if type == 'profile':
-        return Response(app_item.profile_pic_data, mimetype='image/jpeg')
-    else:
-        return Response(app_item.aadhar_pic_data, mimetype='image/jpeg')
-
-@app.route('/fix-my-db')
-def fix_my_db():
-    try:
-        db.drop_all()
-        db.create_all()
-        return "✅ SUCCESS: Your database is fixed! You can now Register and Login."
-    except Exception as e:
-        return f"❌ ERROR: {str(e)}"
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
-    app.run(debug=True, host='0.0.0.0', port=port)
+        {"bus_no": "K-101", "path": "Kolhapur City
