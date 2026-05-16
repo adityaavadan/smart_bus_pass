@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Complete Payment - SmartPass{% endblock %}
+{% block title %}{{ t.pay_now }} - SmartPass{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
-    <h2>Secure Checkout</h2>
-    <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline">Cancel</a>
+    <h2>{{ t.pay_now }}</h2>
+    <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline">{{ t.home }}</a>
 </div>
 
 <div class="card" style="margin: 0 auto; max-width: 500px; border-top: 4px solid var(--primary-color);">
@@ -13,12 +13,12 @@
     
     <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
         <p style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-            <span>Pass Type:</span>
-            <strong>{{ application.pass_type }} Pass</strong>
+            <span>{{ t.pass_type }}:</span>
+            <strong>{{ application.pass_type }}</strong>
         </p>
         <p style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
             <span>Route:</span>
-            <strong>{{ application.source }} to {{ application.destination }}</strong>
+            <strong>{{ application.source }} &rarr; {{ application.destination }}</strong>
         </p>
         <hr style="border: 0; border-top: 1px solid #dee2e6; margin: 1rem 0;">
         <p style="display: flex; justify-content: space-between; font-size: 1.2rem;">
@@ -43,10 +43,10 @@
             </div>
         </div>
         
-        <button type="submit" class="btn btn-primary form-submit" style="background-color: var(--success);">Pay ₹{{ application.fee }} Now</button>
+        <button type="submit" class="btn btn-primary form-submit" style="background-color: var(--success); width: 100%;">{{ t.pay_now }} - ₹{{ application.fee }}</button>
     </form>
     <p style="text-align: center; margin-top: 1rem; font-size: 0.85rem; color: #6c757d;">
-        🔒 Payments are secured and encrypted. This is a mockup.
+        🔒 Payments are secured and encrypted.
     </p>
 </div>
 {% endblock %}
