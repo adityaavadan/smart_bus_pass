@@ -7,22 +7,23 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(10), nullable=False, default='student')
+    role = db.Column(db.String(10), nullable=False, default='student') # 'student' or 'admin'
     full_name = db.Column(db.String(100), nullable=True)
     phone_number = db.Column(db.String(20), nullable=True)
     address = db.Column(db.String(200), nullable=True)
+    # Relationship to applications
     applications = db.relationship('PassApplication', backref='student', lazy=True)
 
 class PassApplication(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    pass_type = db.Column(db.String(50), nullable=False)
+    pass_type = db.Column(db.String(50), nullable=False) # 'Monthly', 'Quarterly', 'Yearly'
     source = db.Column(db.String(100), nullable=False)
     destination = db.Column(db.String(100), nullable=False)
-    status = db.Column(db.String(20), nullable=False, default='Pending')
+    status = db.Column(db.String(20), nullable=False, default='Pending') # Pending, Pending Payment, Approved, Rejected, Expired
     fee = db.Column(db.Integer, nullable=False, default=0)
     
-    # --- FIXED: Now storing ACTUAL PHOTO DATA ---
+    # Store ACTUAL PHOTO BYTES in the database (Permanent Storage)
     profile_pic_data = db.Column(db.LargeBinary, nullable=True)
     aadhar_pic_data = db.Column(db.LargeBinary, nullable=True)
     
