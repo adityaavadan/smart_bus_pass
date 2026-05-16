@@ -48,46 +48,49 @@
             <tr>
                 <th>App ID</th>
                 <th>Student</th>
-                <th>Photo</th>
-                <th>Aadhar</th>
+                <th>{{ t.profile_photo }}</th>
+                <th>{{ t.aadhar_photo }}</th>
                 <th>Route</th>
                 <th>Type</th>
-                <th>Status</th>
-                <th>Action</th>
+                <th>{{ t.status }}</th>
+                <th>{{ t.action }}</th>
             </tr>
         </thead>
         <tbody>
             {% for app in applications %}
             <tr>
                 <td>#{{ app.id }}</td>
-                <td>{{ app.student.email }}</td>
+                <td><strong>{{ app.student.email }}</strong></td>
                 <td>
                     {% if app.profile_pic_data %}
-                        <img src="{{ url_for('get_image', app_id=app.id, type='profile') }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                        <img src="{{ url_for('get_image', app_id=app.id, type='profile') }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" alt="Photo">
                     {% else %}
-                        <span style="color: #999;">No Photo</span>
+                        <span style="font-size: 0.8rem; color: #999;">No Photo</span>
                     {% endif %}
                 </td>
                 <td>
                     {% if app.aadhar_pic_data %}
                         <a href="{{ url_for('get_image', app_id=app.id, type='aadhar') }}" target="_blank">
-                            <img src="{{ url_for('get_image', app_id=app.id, type='aadhar') }}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
+                            <img src="{{ url_for('get_image', app_id=app.id, type='aadhar') }}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;" alt="Aadhar">
                         </a>
                     {% else %}
-                        <span style="color: #999;">No Aadhar</span>
+                        <span style="font-size: 0.8rem; color: #999;">No Aadhar</span>
                     {% endif %}
                 </td>
                 <td>{{ app.source }} &rarr; {{ app.destination }}</td>
                 <td>{{ app.pass_type }}</td>
                 <td>
                     <span class="badge badge-{{ app.status.lower().replace(' ', '-') }}">
-                        {{ app.status }}
+                        {% if app.status == 'Pending' %}{{ t.pending }}
+                        {% elif app.status == 'Approved' %}{{ t.approve }}
+                        {% elif app.status == 'Rejected' %}{{ t.reject }}
+                        {% else %}{{ app.status }}{% endif %}
                     </span>
                 </td>
                 <td>
                     {% if app.status == 'Pending' %}
-                        <a href="{{ url_for('approve_pass', app_id=app.id) }}" class="btn btn-success" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">Approve</a>
-                        <a href="{{ url_for('reject_pass', app_id=app.id) }}" class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">Reject</a>
+                        <a href="{{ url_for('approve_pass', app_id=app.id) }}" class="btn btn-success" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; margin-right: 0.5rem;">{{ t.approve }}</a>
+                        <a href="{{ url_for('reject_pass', app_id=app.id) }}" class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">{{ t.reject }}</a>
                     {% else %}
                         <em>Processed</em>
                     {% endif %}
@@ -98,6 +101,7 @@
     </table>
 </div>
 
+<!-- Chart Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const ctx = document.getElementById('passTypeChart').getContext('2d');
@@ -114,7 +118,9 @@
         },
         options: {
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } }
+            plugins: {
+                legend: { position: 'bottom' }
+            }
         }
     });
 </script>
