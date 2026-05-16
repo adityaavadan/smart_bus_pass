@@ -98,11 +98,11 @@
     new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Monthly', 'Quarterly'],
+            labels: ['Monthly', 'Quarterly', 'Yearly'],
             datasets: [{
-                data: [{{ stats.monthly_count }}, {{ stats.quarterly_count }}],
-                backgroundColor: ['#4e73df', '#1cc88a'],
-                hoverBackgroundColor: ['#2e59d9', '#17a673'],
+                data: [{{ stats.monthly_count }}, {{ stats.quarterly_count }}, {{ stats.yearly_count }}],
+                backgroundColor: ['#4e73df', '#1cc88a', '#f6c23e'],
+                hoverBackgroundColor: ['#2e59d9', '#17a673', '#f4b619'],
                 hoverBorderColor: "rgba(234, 236, 244, 1)",
             }],
         },
