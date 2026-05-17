@@ -6,6 +6,13 @@
 <div class="card">
     <h2>{{ t.register }}</h2>
     <form method="POST" action="{{ url_for('register') }}">
+        
+        <!-- NEW: Full Name Field -->
+        <div class="form-group">
+            <label for="full_name">Full Name</label>
+            <input type="text" id="full_name" name="full_name" required placeholder="Enter your full name">
+        </div>
+
         <div class="form-group">
             <label for="email">Email</label>
             <input type="email" id="email" name="email" required placeholder="Enter your email">
