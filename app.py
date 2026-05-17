@@ -63,6 +63,7 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        full_name = request.form.get('full_name') # <-- NEW LOGIC ADDED
         email = request.form['email']
         password = request.form['password']
         
@@ -74,6 +75,7 @@ def register():
         hashed_password = generate_password_hash(password)
         
         otp = str(random.randint(100000, 999999))
+        session['reg_full_name'] = full_name # <-- NEW LOGIC ADDED
         session['reg_email'] = email
         session['reg_password'] = hashed_password
         session['reg_role'] = 'student'
@@ -98,7 +100,8 @@ def verify_otp():
             new_user = User(
                 email=session['reg_email'], 
                 password=session['reg_password'], 
-                role=session['reg_role']
+                role=session['reg_role'],
+                full_name=session.get('reg_full_name') # <-- NEW LOGIC ADDED
             )
             db.session.add(new_user)
             db.session.commit()
@@ -107,6 +110,7 @@ def verify_otp():
             session.pop('reg_password', None)
             session.pop('reg_role', None)
             session.pop('reg_otp', None)
+            session.pop('reg_full_name', None) # <-- NEW LOGIC ADDED
             
             flash('Email verified and registration successful! Please login.', 'success')
             return redirect(url_for('login'))
