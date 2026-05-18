@@ -11,22 +11,18 @@ class User(db.Model):
     full_name = db.Column(db.String(100), nullable=True)
     phone_number = db.Column(db.String(20), nullable=True)
     address = db.Column(db.String(200), nullable=True)
-    # Relationship to applications
     applications = db.relationship('PassApplication', backref='student', lazy=True)
 
 class PassApplication(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    pass_type = db.Column(db.String(50), nullable=False) # 'Monthly', 'Quarterly', 'Yearly'
+    pass_type = db.Column(db.String(50), nullable=False) # e.g., 'Monthly', 'Quarterly'
     source = db.Column(db.String(100), nullable=False)
     destination = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(20), nullable=False, default='Pending') # Pending, Pending Payment, Approved, Rejected, Expired
     fee = db.Column(db.Integer, nullable=False, default=0)
-    
-    # Store ACTUAL PHOTO BYTES in the database (Permanent Storage)
     profile_pic_data = db.Column(db.LargeBinary, nullable=True)
     aadhar_pic_data = db.Column(db.LargeBinary, nullable=True)
-    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     validity_start = db.Column(db.DateTime, nullable=True)
     validity_end = db.Column(db.DateTime, nullable=True)
