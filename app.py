@@ -438,10 +438,20 @@ def get_image(app_id, type):
 
 @app.route('/fix-my-db')
 def fix_my_db():
+    from sqlalchemy import text
     try:
-        db.drop_all()
         db.create_all()
-        return "✅ SUCCESS: Your database is fixed! You can now Register and Login."
+        with db.engine.connect() as conn:
+            try:
+                conn.execute(text('ALTER TABLE "user" ADD COLUMN full_name VARCHAR(100);'))
+            except:
+                pass
+            try:
+                conn.execute(text('ALTER TABLE user ADD COLUMN full_name VARCHAR(100);'))
+            except:
+                pass
+            conn.commit()
+        return "✅ SUCCESS: Your database is upgraded! You can now Register without any 500 errors."
     except Exception as e:
         return f"❌ ERROR: {str(e)}"
 
