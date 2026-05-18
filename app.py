@@ -1,7 +1,5 @@
 import os
 import random
-import smtplib
-from email.mime.text import MIMEText
 from flask import Flask, render_template, request, redirect, url_for, session, flash, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -16,37 +14,10 @@ app.secret_key = 'super_secret_key_for_bus_pass'
 # Set session to last for 30 days
 app.permanent_session_lifetime = timedelta(days=30)
 
-# --- EMAIL OTP CONFIGURATION ---
-SENDER_EMAIL = "adityaavadan2007@gmail.com"
-APP_PASSWORD = "tzutzwhelowthluq" 
-
-def send_real_otp(receiver_email, otp_code):
-    try:
-        subject = "Your SmartPass Verification Code"
-        body = f"Welcome to SmartPass!\n\nYour OTP code is: {otp_code}\n\nPlease do not share this code with anyone.\n\nThank you,\nSmartPass Admin Team"
-        
-        msg = MIMEText(body)
-        msg['Subject'] = subject
-        msg['From'] = "SmartPass Admin"
-        msg['To'] = receiver_email
-        
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(SENDER_EMAIL, APP_PASSWORD)
-        server.sendmail(SENDER_EMAIL, receiver_email, msg.as_string())
-        server.quit()
-        return True
-    except Exception as e:
-        print(f"Email Error: {e}")
-        return False
-# ------------------------------------
-
-# --- DATABASE CONFIGURATION FIX ---
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///' + os.path.join(basedir, 'buspass.db'))
+# PostgreSQL for Render, SQLite for Local
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///buspass.db')
 if app.config['SQLALCHEMY_DATABASE_URI'] and app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace("postgres://", "postgresql://", 1)
-# ----------------------------------
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024 # 50MB limit for uploads
@@ -110,14 +81,8 @@ def register():
         session['reg_role'] = 'student'
         session['reg_otp'] = otp
         
-        # --- NEW: SENDING THE REAL OTP EMAIL ---
-        email_sent = send_real_otp(email, otp)
-        
-        if email_sent:
-            flash('A real OTP code has been sent to your email inbox!', 'info')
-        else:
-            flash('Failed to send OTP email. Please try again later.', 'danger')
-        # ---------------------------------------
+        print(f"--- SIMULATED EMAIL SENT TO {email} | OTP: {otp} ---")
+        flash(f'An OTP has been sent to your email. (SIMULATION CODE: {otp})', 'info')
         
         return redirect(url_for('verify_otp'))
         
@@ -438,20 +403,10 @@ def get_image(app_id, type):
 
 @app.route('/fix-my-db')
 def fix_my_db():
-    from sqlalchemy import text
     try:
+        db.drop_all()
         db.create_all()
-        with db.engine.connect() as conn:
-            try:
-                conn.execute(text('ALTER TABLE "user" ADD COLUMN full_name VARCHAR(100);'))
-            except:
-                pass
-            try:
-                conn.execute(text('ALTER TABLE user ADD COLUMN full_name VARCHAR(100);'))
-            except:
-                pass
-            conn.commit()
-        return "✅ SUCCESS: Your database is upgraded! You can now Register without any 500 errors."
+        return "✅ SUCCESS: Your database is fixed! You can now Register and Login."
     except Exception as e:
         return f"❌ ERROR: {str(e)}"
 
