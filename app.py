@@ -1,5 +1,7 @@
 import os
 import random
+import smtplib
+from email.mime.text import MIMEText
 from flask import Flask, render_template, request, redirect, url_for, session, flash, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -13,6 +15,31 @@ app = Flask(__name__)
 app.secret_key = 'super_secret_key_for_bus_pass'
 # Set session to last for 30 days
 app.permanent_session_lifetime = timedelta(days=30)
+
+# --- NEW: EMAIL OTP CONFIGURATION ---
+SENDER_EMAIL = "your.email@gmail.com"  # <-- YOU MUST CHANGE THIS TO YOUR GMAIL!
+APP_PASSWORD = "tzutzwhelowthluq" # Your password with spaces removed
+
+def send_real_otp(receiver_email, otp_code):
+    try:
+        subject = "Your SmartPass Verification Code"
+        body = f"Welcome to SmartPass!\n\nYour OTP code is: {otp_code}\n\nPlease do not share this code with anyone.\n\nThank you,\nSmartPass Admin Team"
+        
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = "SmartPass Admin"
+        msg['To'] = receiver_email
+        
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(SENDER_EMAIL, APP_PASSWORD)
+        server.sendmail(SENDER_EMAIL, receiver_email, msg.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Email Error: {e}")
+        return False
+# ------------------------------------
 
 # PostgreSQL for Render, SQLite for Local
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///buspass.db')
@@ -81,8 +108,14 @@ def register():
         session['reg_role'] = 'student'
         session['reg_otp'] = otp
         
-        print(f"--- SIMULATED EMAIL SENT TO {email} | OTP: {otp} ---")
-        flash(f'An OTP has been sent to your email. (SIMULATION CODE: {otp})', 'info')
+        # --- NEW: SENDING THE REAL OTP EMAIL ---
+        email_sent = send_real_otp(email, otp)
+        
+        if email_sent:
+            flash('A real OTP code has been sent to your email inbox!', 'info')
+        else:
+            flash('Failed to send OTP email. Please try again later.', 'danger')
+        # ---------------------------------------
         
         return redirect(url_for('verify_otp'))
         
