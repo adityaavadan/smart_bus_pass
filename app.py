@@ -16,9 +16,9 @@ app.secret_key = 'super_secret_key_for_bus_pass'
 # Set session to last for 30 days
 app.permanent_session_lifetime = timedelta(days=30)
 
-# --- NEW: EMAIL OTP CONFIGURATION ---
-SENDER_EMAIL = "your.email@gmail.com"  # <-- YOU MUST CHANGE THIS TO YOUR GMAIL!
-APP_PASSWORD = "tzutzwhelowthluq" # Your password with spaces removed
+# --- EMAIL OTP CONFIGURATION ---
+SENDER_EMAIL = "adityaavadan2007@gmail.com"
+APP_PASSWORD = "tzutzwhelowthluq" 
 
 def send_real_otp(receiver_email, otp_code):
     try:
